@@ -215,6 +215,144 @@ tbody tr:last-child td { border-bottom: none; }
 .stok-tipis { color: var(--kuning); font-weight: 700; }
 .stok-habis { color: var(--merah); font-weight: 700; }
 
+/* Halaman stok: kartu angka ringkasan, kartu peringatan, saringan,
+   dan formulir barang masuk/keluar. */
+.ringkasan-stok {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kartu-angka {
+  background: var(--kertas);
+  border: 1px solid var(--garis);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+
+.kartu-angka .angka {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.kartu-angka .label-angka {
+  font-size: 13px;
+  color: var(--abu);
+}
+
+.kartu-angka.peringatan .angka { color: var(--kuning); }
+.kartu-angka.bahaya .angka { color: var(--merah); }
+
+/* Kartu peringatan perlu dibeli: tepinya kuning tegas biar langsung kelihatan */
+.kartu-peringatan {
+  border: 2px solid var(--kuning);
+  background: #fffaf0;
+}
+
+.kartu-peringatan h2 {
+  color: #8a5a12;
+  border-left-color: var(--kuning);
+}
+
+.daftar-peringatan {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.daftar-peringatan li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0e2c4;
+}
+
+.daftar-peringatan li:last-child { border-bottom: none; }
+
+.daftar-peringatan .sisa { color: var(--abu); }
+
+.lencana {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lencana-habis { background: #fdecea; color: var(--merah); }
+.lencana-menipis { background: #fdf3d7; color: #8a5a12; }
+
+/* Label jenis di tabel riwayat stok */
+.jenis-masuk { color: var(--hijau-tua); font-weight: 700; }
+.jenis-keluar { color: var(--merah); font-weight: 700; }
+
+/* Tombol saringan Semua / Menipis / Habis di atas daftar stok */
+.saringan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tombol-saring {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--garis-input);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--teks);
+  font-size: 15px;
+  box-shadow: none;
+}
+
+.tombol-saring.aktif {
+  background: var(--hijau);
+  border-color: var(--hijau);
+  color: #fff;
+  font-weight: 700;
+}
+
+.tombol-saring:hover { background: var(--hijau-muda); }
+.tombol-saring.aktif:hover { background: #265841; }
+
+/* Formulir catat barang masuk / keluar: dua kolom di layar lebar,
+   kolom pilihannya dibuat sama seperti kolom isian lainnya */
+.formulir {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.kolom { margin-bottom: 0; }
+
+.kolom select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--garis-input);
+  border-radius: 10px;
+  background: #fbfaf5;
+  color: var(--teks);
+  font: inherit;
+  font-size: 16px;
+}
+
+.kolom select:focus {
+  outline: none;
+  border-color: var(--hijau);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(47, 107, 79, 0.18);
+}
+
+.formulir button { grid-column: 1 / -1; }
+
 /* Navigasi antar halaman dan halaman kasir.
    Dibuat lengket di atas supaya gampang pindah halaman tanpa gulir ke atas. */
 .navigasi {
@@ -378,6 +516,10 @@ tbody tr:last-child td { border-bottom: none; }
   .ringkasan { grid-template-columns: 1fr; }
   .ringkasan strong { font-size: 22px; }
 
+  /* Halaman stok: kartu angka jadi dua kolom, formulir jadi satu kolom */
+  .ringkasan-stok { grid-template-columns: repeat(2, 1fr); }
+  .formulir { grid-template-columns: 1fr; }
+
   .total { font-size: 18px; }
 
   /* Navigasi lengket: biar tetap muat, jarak antar pil dikecilin */
@@ -390,4 +532,5 @@ tbody tr:last-child td { border-bottom: none; }
 @media (max-width: 400px) {
   th, td { padding: 6px; font-size: 13px; }
   .tombol-kecil { font-size: 13px; }
+  .daftar-peringatan li { gap: 6px; }
 }

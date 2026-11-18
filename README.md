@@ -11,7 +11,7 @@ Pemilik warung atau toko kecil. Semua urusan toko di satu tempat: jualan lewat k
 Penggabungan dikerjakan bertahap (satu tahap per potongan, selalu diuji sebelum lanjut):
 
 - [x] Tahap M1: Fondasi — basis aplikasi kasir (login, kelola produk, transaksi, riwayat & laporan) disalin ke repo ini, skema basis data digabung jadi satu (7 tabel), nama dan identitas disesuaikan jadi sistem terpadu
-- [ ] Tahap M2: Modul stok — daftar stok, barang masuk, barang keluar, dan riwayat mutasi dari inventaris menyatu di dashboard yang sama, memakai tabel produk yang sama dengan kasir
+- [x] Tahap M2: Modul stok — daftar stok, barang masuk, barang keluar, dan riwayat mutasi dari inventaris menyatu di dashboard yang sama, memakai tabel produk yang sama dengan kasir
 - [ ] Tahap M3: Peringatan stok dan supplier — kartu peringatan stok menipis/habis, modul supplier dan hubungannya dengan produk
 - [ ] Tahap M4: Etalase katalog publik — katalog produk untuk pelanggan (daftar, detail, keranjang, pesan via WhatsApp) tanpa login, terpisah jelas dari halaman admin
 - [ ] Tahap M5: Alur stok menyatu — penjualan di kasir dan mutasi stok memakai satu sumber stok yang sama; etalase ikut berubah otomatis

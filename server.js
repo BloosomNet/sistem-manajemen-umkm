@@ -24,9 +24,10 @@ app.get('/api/sehat', async (req, res) => {
   res.json({ status: 'ok', pesan: 'Server sistem manajemen UMKM berjalan' });
 });
 
-// Rute produk, kasir, laporan, dan login.
+// Rute produk, kasir, stok, laporan, dan login.
 app.use('/api/produk', require('./src/routes/produk'));
 app.use('/api/transaksi', require('./src/routes/transaksi'));
+app.use('/api/stok', require('./src/routes/stok'));
 app.use('/api/laporan', require('./src/routes/laporan'));
 app.use('/api', require('./src/routes/auth'));
 

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stok — Sistem Manajemen UMKM</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="wadah">
+    <nav class="navigasi">
+      <a href="/">Kelola Produk</a>
+      <a href="/kasir.html">Kasir</a>
+      <strong>Stok</strong>
+      <a href="/riwayat.html">Riwayat &amp; Laporan</a>
+      <span id="info-masuk" class="info-masuk"></span>
+    </nav>
+    <h1>Stok</h1>
+    <p class="keterangan">Pantau stok barang di warung: mana yang masih aman, mana yang mulai menipis, dan mana yang sudah habis. Barang masuk di sini langsung kelihatan di kasir — stoknya satu dan sama.</p>
+
+    <div class="ringkasan-stok">
+      <div class="kartu-angka">
+        <span class="angka" id="total-produk">–</span>
+        <span class="label-angka">Jenis barang</span>
+      </div>
+      <div class="kartu-angka">
+        <span class="angka" id="total-stok">–</span>
+        <span class="label-angka">Total stok</span>
+      </div>
+      <div class="kartu-angka peringatan">
+        <span class="angka" id="stok-menipis">–</span>
+        <span class="label-angka">Stok menipis</span>
+      </div>
+      <div class="kartu-angka bahaya">
+        <span class="angka" id="stok-habis">–</span>
+        <span class="label-angka">Stok habis</span>
+      </div>
+    </div>
+
+    <section class="kartu kartu-peringatan" id="kartu-peringatan" hidden>
+      <h2>Perlu dibeli lagi</h2>
+      <p class="keterangan">Barang di bawah ini stoknya sudah habis atau menipis — paling atas yang paling mendesak.</p>
+      <ul class="daftar-peringatan" id="daftar-peringatan"></ul>
+    </section>
+    <p class="keterangan" id="stok-aman" hidden>Semua stok masih aman, belum ada yang perlu dibeli lagi.</p>
+
+    <section class="kartu">
+      <h2>Daftar Stok</h2>
+      <label class="pencarian">
+        Cari barang
+        <input type="search" id="cari" maxlength="100" placeholder="Cari nama atau kategori...">
+      </label>
+      <div class="saringan" id="saringan">
+        <button type="button" class="tombol-saring aktif" data-saring="">Semua</button>
+        <button type="button" class="tombol-saring" data-saring="menipis">Menipis</button>
+        <button type="button" class="tombol-saring" data-saring="habis">Habis</button>
+      </div>
+      <p id="pesan" class="pesan" hidden></p>
+      <div class="bungkus-tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>Barang</th>
+              <th>Kategori</th>
+              <th>Harga</th>
+              <th>Stok</th>
+            </tr>
+          </thead>
+          <tbody id="daftar-stok"></tbody>
+        </table>
+      </div>
+      <p id="kosong" class="keterangan" hidden>Belum ada barang di sini.</p>
+    </section>
+
+    <section class="kartu">
+      <h2>Catat barang masuk / keluar</h2>
+      <p class="keterangan">Barang masuk nambah stok (misalnya habis belanja ke supplier), barang keluar ngurangin stok (misalnya rusak atau dipakai sendiri).</p>
+      <form id="form-pergerakan" class="formulir">
+        <label class="kolom">
+          Barang
+          <select id="pilih-produk" required>
+            <option value="">Pilih barang dulu</option>
+          </select>
+        </label>
+        <label class="kolom">
+          Jenis
+          <select id="pilih-jenis">
+            <option value="masuk">Masuk</option>
+            <option value="keluar">Keluar</option>
+          </select>
+        </label>
+        <label class="kolom">
+          Jumlah
+          <input type="number" id="jumlah" min="1" step="1" placeholder="misal 10" required>
+        </label>
+        <label class="kolom" id="kolom-harga-beli">
+          Harga beli (khusus masuk, boleh kosong)
+          <input type="number" id="harga-beli" min="0" step="1" placeholder="misal 4500">
+        </label>
+        <label class="kolom">
+          Keterangan (boleh kosong)
+          <input type="text" id="keterangan" maxlength="100" placeholder="nama supplier, atau alasan keluar">
+        </label>
+        <button type="submit">Simpan</button>
+      </form>
+      <p id="pesan-form" class="pesan" hidden></p>
+    </section>
+
+    <section class="kartu">
+      <h2>Riwayat pergerakan stok</h2>
+      <p id="pesan-riwayat" class="pesan" hidden></p>
+      <div class="bungkus-tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Barang</th>
+              <th>Jenis</th>
+              <th>Jumlah</th>
+              <th>Harga beli</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="daftar-riwayat"></tbody>
+        </table>
+      </div>
+      <p id="riwayat-kosong" class="keterangan" hidden>Belum ada barang masuk atau keluar.</p>
+    </section>
+  </main>
+  <script src="/js/sesi.js"></script>
+  <script src="/js/stok.js"></script>
+</body>
+</html>

@@ -1,21 +1,38 @@
 // Model Produk: semua perintah ke tabel produk dikumpulkan di sini.
+// Tabel ini dipakai bersama oleh kasir dan modul stok — satu sumber stok,
+// jadi barang masuk di halaman stok langsung kelihatan di kasir.
 const pool = require('../config/database');
+
+// Batas stok menipis: 5 ke bawah (tapi masih di atas nol) dianggap menipis.
+// Angka ini dipakai di mana-mana, jadi ditaruh di sini saja.
+const BATAS_MENIPIS = 5;
 
 // Mengambil semua produk, diurutkan berdasarkan nama.
 // Kalau diberi kata kunci, hanya produk yang nama atau kategorinya cocok yang dikembalikan.
 // Tanda % dan _ di kata kunci diamankan supaya dianggap huruf biasa, bukan pola LIKE.
-async function semuaProduk(kataKunci) {
+// Saringan kedua (boleh kosong): 'menipis' (stok 1 sampai 5) atau 'habis'
+// (stok 0) — dipakai halaman stok, boleh digabung dengan kata kunci.
+async function semuaProduk(kataKunci, saringan) {
   const kata = typeof kataKunci === 'string' ? kataKunci.trim() : '';
-  if (!kata) {
-    const [baris] = await pool.query('SELECT * FROM produk ORDER BY nama ASC');
-    return baris;
+  const syarat = [];
+  const nilai = [];
+  if (saringan === 'menipis') {
+    syarat.push('stok > 0 AND stok <= ?');
+    nilai.push(BATAS_MENIPIS);
+  } else if (saringan === 'habis') {
+    syarat.push('stok = 0');
   }
-  const pola = '%' + kata.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_') + '%';
-  // Tanda \ di pola sudah diamankan di atas; LIKE MySQL memakai \ sebagai
-  // karakter pelindung bawaan, jadi tidak perlu klausa ESCAPE.
+  if (kata) {
+    const pola = '%' + kata.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_') + '%';
+    // Tanda \ di pola sudah diamankan di atas; LIKE MySQL memakai \ sebagai
+    // karakter pelindung bawaan, jadi tidak perlu klausa ESCAPE.
+    syarat.push('(nama LIKE ? OR kategori LIKE ?)');
+    nilai.push(pola, pola);
+  }
+  const klausa = syarat.length ? ' WHERE ' + syarat.join(' AND ') : '';
   const [baris] = await pool.query(
-    'SELECT * FROM produk WHERE nama LIKE ? OR kategori LIKE ? ORDER BY nama ASC',
-    [pola, pola]
+    'SELECT * FROM produk' + klausa + ' ORDER BY nama ASC',
+    nilai
   );
   return baris;
 }
@@ -51,4 +68,30 @@ async function hapusProduk(id) {
   return hasil.affectedRows > 0;
 }
 
-module.exports = { semuaProduk, cariBerdasarkanId, tambahProduk, ubahProduk, hapusProduk };
+// Daftar belanja: produk yang perlu dibeli lagi — stoknya habis atau
+// menipis — diurutkan dari yang paling mendesak (stok paling kecil dulu).
+async function perluDibeli() {
+  const [baris] = await pool.query(
+    'SELECT * FROM produk WHERE stok <= ? ORDER BY stok ASC, nama ASC',
+    [BATAS_MENIPIS]
+  );
+  return baris;
+}
+
+// Ringkasan stok buat kartu di halaman stok: jumlah produk, total stok,
+// berapa yang menipis, dan berapa yang habis. Dihitung sekali jalan
+// dari tabel produk.
+async function ringkasanStok() {
+  const [baris] = await pool.query(
+    `SELECT
+      COUNT(*) AS total_produk,
+      COALESCE(SUM(stok), 0) AS total_stok,
+      COALESCE(SUM(CASE WHEN stok > 0 AND stok <= ? THEN 1 ELSE 0 END), 0) AS menipis,
+      COALESCE(SUM(CASE WHEN stok = 0 THEN 1 ELSE 0 END), 0) AS habis
+     FROM produk`,
+    [BATAS_MENIPIS]
+  );
+  return baris[0];
+}
+
+module.exports = { semuaProduk, cariBerdasarkanId, tambahProduk, ubahProduk, hapusProduk, perluDibeli, ringkasanStok, BATAS_MENIPIS };
