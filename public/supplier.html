@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier — Sistem Manajemen UMKM</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="wadah">
+    <nav class="navigasi">
+      <a href="/">Kelola Produk</a>
+      <a href="/kasir.html">Kasir</a>
+      <a href="/stok.html">Stok</a>
+      <strong>Supplier</strong>
+      <a href="/riwayat.html">Riwayat &amp; Laporan</a>
+      <span id="info-masuk" class="info-masuk"></span>
+    </nav>
+    <h1>Supplier</h1>
+    <p class="keterangan">Siapa yang menyuplai barang apa — biar pas stok menipis, langsung tahu mau pesan ke siapa. Supplier yang dihubungkan dengan barangnya ikut muncul di kartu peringatan halaman stok.</p>
+
+    <section class="kartu">
+      <h2>Tambah supplier</h2>
+      <form id="form-supplier" class="formulir">
+        <label class="kolom">
+          Nama supplier
+          <input type="text" id="supplier-nama" maxlength="100" placeholder="misal Toko Sinar" required>
+        </label>
+        <label class="kolom">
+          Kontak (boleh kosong)
+          <input type="text" id="supplier-kontak" maxlength="100" placeholder="nomor WA atau telepon">
+        </label>
+        <label class="kolom">
+          Alamat (boleh kosong)
+          <input type="text" id="supplier-alamat" maxlength="255" placeholder="alamat toko atau pasar">
+        </label>
+        <button type="submit">Tambah supplier</button>
+      </form>
+      <p id="pesan-supplier" class="pesan" hidden></p>
+    </section>
+
+    <section class="kartu">
+      <h2>Daftar supplier</h2>
+      <div id="daftar-supplier"></div>
+      <p id="supplier-kosong" class="keterangan" hidden>Belum ada supplier. Tambahkan lewat formulir di atas.</p>
+    </section>
+
+    <section class="kartu">
+      <h2>Hubungkan supplier dengan barang</h2>
+      <p class="keterangan">Pilih supplier dan barang yang disuplai olehnya — satu supplier boleh menyuplai banyak barang, dan satu barang boleh disuplai lebih dari satu supplier.</p>
+      <form id="form-tautan" class="formulir">
+        <label class="kolom">
+          Supplier
+          <select id="tautan-supplier" required>
+            <option value="">Pilih supplier dulu</option>
+          </select>
+        </label>
+        <label class="kolom">
+          Barang yang disuplai
+          <select id="tautan-produk" required>
+            <option value="">Pilih barang dulu</option>
+          </select>
+        </label>
+        <button type="submit">Hubungkan</button>
+      </form>
+      <p id="pesan-tautan" class="pesan" hidden></p>
+    </section>
+  </main>
+  <script src="/js/sesi.js"></script>
+  <script src="/js/supplier.js"></script>
+</body>
+</html>

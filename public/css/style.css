@@ -276,6 +276,26 @@ tbody tr:last-child td { border-bottom: none; }
 
 .daftar-peringatan .sisa { color: var(--abu); }
 
+/* Nama supplier di kartu peringatan: pemilik langsung tahu mau pesan ke siapa */
+.daftar-peringatan .sumber { color: var(--hijau-tua); font-size: 14px; }
+
+/* Halaman supplier: satu supplier satu kartu, nama di atas, kontak dan
+   alamat di bawahnya, lalu barang yang disuplainya. */
+.kartu-supplier {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--garis);
+}
+
+.kartu-supplier:last-child { border-bottom: none; }
+
+.kartu-supplier .kontak { color: var(--abu); font-size: 14px; }
+.kartu-supplier .suplai { font-size: 14px; }
+
+#form-tautan { margin-top: 16px; }
+
 .lencana {
   padding: 2px 10px;
   border-radius: 999px;

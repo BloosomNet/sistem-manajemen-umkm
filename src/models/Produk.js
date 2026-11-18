@@ -70,9 +70,19 @@ async function hapusProduk(id) {
 
 // Daftar belanja: produk yang perlu dibeli lagi — stoknya habis atau
 // menipis — diurutkan dari yang paling mendesak (stok paling kecil dulu).
+// Tiap barang ikut membawa nama suppliernya (dipisah koma, null kalau
+// belum ada supplier yang dihubungkan), supaya kartu peringatan di
+// halaman stok langsung tahu mau pesan ke siapa.
 async function perluDibeli() {
   const [baris] = await pool.query(
-    'SELECT * FROM produk WHERE stok <= ? ORDER BY stok ASC, nama ASC',
+    `SELECT p.*,
+      GROUP_CONCAT(s.nama ORDER BY s.nama SEPARATOR ', ') AS nama_supplier
+     FROM produk p
+     LEFT JOIN supplier_produk sp ON sp.produk_id = p.id
+     LEFT JOIN supplier s ON s.id = sp.supplier_id
+     WHERE p.stok <= ?
+     GROUP BY p.id
+     ORDER BY p.stok ASC, p.nama ASC`,
     [BATAS_MENIPIS]
   );
   return baris;

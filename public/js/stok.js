@@ -9,6 +9,8 @@ const saringan = document.getElementById('saringan');
 const pilihProduk = document.getElementById('pilih-produk');
 const pilihJenis = document.getElementById('pilih-jenis');
 const kolomHargaBeli = document.getElementById('kolom-harga-beli');
+const kolomSupplier = document.getElementById('kolom-supplier');
+const pilihSupplier = document.getElementById('pilih-supplier');
 const formPergerakan = document.getElementById('form-pergerakan');
 const pesanForm = document.getElementById('pesan-form');
 const daftarRiwayat = document.getElementById('daftar-riwayat');
@@ -121,12 +123,34 @@ async function muatPilihanProduk() {
   if (dipilih) pilihProduk.value = dipilih;
 }
 
-// Harga beli cuma dipakai buat barang masuk — kalau jenisnya keluar,
-// kolomnya disembunyiin aja biar nggak bingung.
+// Harga beli dan supplier cuma dipakai buat barang masuk — kalau
+// jenisnya keluar, kolomnya disembunyiin aja biar nggak bingung.
 function aturKolomHargaBeli() {
   const masuk = pilihJenis.value === 'masuk';
   kolomHargaBeli.hidden = !masuk;
-  if (!masuk) document.getElementById('harga-beli').value = '';
+  kolomSupplier.hidden = !masuk;
+  if (!masuk) {
+    document.getElementById('harga-beli').value = '';
+    pilihSupplier.value = '';
+  }
+}
+
+// Pilihan supplier di formulir barang masuk: supplier yang dipilih
+// langsung dihubungkan dengan barangnya, dan namanya dipakai sebagai
+// keterangan kalau keterangan dikosongkan.
+async function muatPilihanSupplier() {
+  const res = await fetch('/api/supplier');
+  if (!res.ok) return;
+  const data = await res.json();
+  const dipilih = pilihSupplier.value;
+  pilihSupplier.innerHTML = '<option value="">Tanpa supplier</option>';
+  data.supplier.forEach((s) => {
+    const pilihan = document.createElement('option');
+    pilihan.value = s.id;
+    pilihan.textContent = s.nama;
+    pilihSupplier.appendChild(pilihan);
+  });
+  if (dipilih) pilihSupplier.value = dipilih;
 }
 
 pilihJenis.addEventListener('change', aturKolomHargaBeli);
@@ -147,6 +171,7 @@ formPergerakan.addEventListener('submit', async (e) => {
   if (jenis === 'masuk') {
     const hargaBeli = document.getElementById('harga-beli').value;
     if (hargaBeli !== '') badan.harga_beli = Number(hargaBeli);
+    if (pilihSupplier.value) badan.supplier_id = Number(pilihSupplier.value);
   }
 
   const res = await fetch(`/api/stok/${jenis}`, {
@@ -205,6 +230,8 @@ async function muatRiwayat() {
 
 // Daftar perlu dibeli: barang habis/menipis ditampilkan menonjol di atas,
 // dari yang stoknya paling kecil. Kalau tidak ada, tampilkan kabar aman.
+// Nama supplier ikut ditampilkan, supaya pemilik langsung tahu mau
+// pesan ke siapa — kalau belum ada suppliernya, ditulis apa adanya.
 async function muatPeringatan() {
   const res = await fetch('/api/stok/perlu-dibeli');
   if (!res.ok) return;
@@ -215,10 +242,14 @@ async function muatPeringatan() {
   data.produk.forEach((p) => {
     const item = document.createElement('li');
     const habis = p.stok === 0;
+    const sumber = p.nama_supplier
+      ? `dari ${amankanTeks(p.nama_supplier)}`
+      : 'belum ada suppliernya';
     item.innerHTML =
       `<span class="lencana ${habis ? 'lencana-habis' : 'lencana-menipis'}">${habis ? 'Habis' : 'Menipis'}</span>` +
       `<strong>${amankanTeks(p.nama)}</strong>` +
-      `<span class="sisa">sisa ${p.stok}</span>`;
+      `<span class="sisa">sisa ${p.stok}</span>` +
+      `<span class="sumber">${sumber}</span>`;
     daftarPeringatan.appendChild(item);
   });
 }
@@ -238,5 +269,6 @@ muatRingkasan();
 muatPeringatan();
 muatStok();
 muatPilihanProduk();
+muatPilihanSupplier();
 aturKolomHargaBeli();
 muatRiwayat();

@@ -78,6 +78,42 @@ Kekurangan saat ini (jujur):
 - Klik formulir di peramban sungguhan belum diuji — yang diuji endpointnya lewat curl dan elemen halamannya; alur kirim formulirnya memakai fetch yang sama seperti kode tahap sebelumnya.
 - Peringatan stok belum menampilkan supplier-nya sekalian; pemilik masih perlu cek bagian Supplier sendiri (M3).
 
+## Tahap M3 — Selesai: Peringatan stok dan supplier
+
+Yang sudah dibuat:
+- `src/models/Supplier.js` (baru, diambil dari inventaris-barang-warung): daftar supplier lengkap dengan jumlah dan nama barang yang disuplai, cari berdasarkan id, tambah supplier, dan tautkan supplier dengan produk (tidak dobel kalau tautan yang sama dikirim dua kali).
+- `src/controllers/supplierController.js` (baru) + `src/routes/supplier.js` (baru): `GET /api/supplier`, `POST /api/supplier`, `POST /api/supplier/:id/produk`. Semua rute dikunci `perluLogin` — supplier adalah data toko, bukan etalase publik.
+- `server.js`: rute `/api/supplier` didaftarkan. Skema tidak berubah — tabel `supplier` dan `supplier_produk` sudah ada sejak M1.
+- `public/supplier.html` (baru) + `public/js/supplier.js` (baru): formulir tambah supplier (nama wajib, kontak dan alamat boleh kosong), daftar supplier dalam bentuk kartu (nama, kontak, alamat, barang yang disuplai), dan formulir hubungkan supplier dengan barang.
+- Navigasi: tautan "Supplier" ditambahkan di semua halaman (`index.html`, `kasir.html`, `stok.html`, `riwayat.html`, `ganti-kata-sandi.html`); di `supplier.html` sendiri tampil sebagai pil aktif.
+- `src/models/Produk.js`: `perluDibeli()` sekarang ikut membawa `nama_supplier` (nama-nama supplier dipisah koma, null kalau belum ada supplier yang dihubungkan). Pemakaian lama tidak berubah — baris yang dikembalikan sama, cuma tambah satu kolom.
+- Kartu peringatan di halaman stok sekarang menampilkan suppliernya: tiap barang di daftar "Perlu dibeli lagi" tertulis "dari Toko Sinar" atau "belum ada suppliernya" — ini menutup kekurangan M2 yang mencatat peringatan belum menampilkan supplier.
+- Formulir barang masuk di halaman stok sekarang punya pilihan supplier (cuma muncul kalau jenisnya masuk): supplier yang dipilih langsung dihubungkan dengan barangnya, dan namanya dipakai sebagai keterangan kalau kolom keterangan dikosongkan. Kalau keterangan diisi sendiri, yang dipakai tetap keterangan itu. Ini menutup kekurangan M2 yang lain — keterangan barang masuk tadinya masih teks bebas, belum terhubung ke data supplier.
+- `public/css/style.css`: gaya kartu supplier (`.kartu-supplier`, `.kontak`, `.suplai`) dan nama supplier di kartu peringatan (`.sumber`), mengikuti variabel warna yang sudah ada; di HP formulir supplier ikut jadi satu kolom seperti formulir stok.
+
+Cara kerja singkat:
+- Tambah supplier: `POST /api/supplier` → baris baru di tabel `supplier` → daftar supplier dimuat ulang.
+- Hubungkan: `POST /api/supplier/:id/produk` → baris di `supplier_produk` (kunci unik menjaga tidak dobel) → daftar supplier menampilkan barangnya.
+- Barang masuk dengan supplier: `POST /api/stok/masuk` dengan `supplier_id` → supplier dicek dulu (tidak ada = 404) → stok dicatat seperti biasa → supplier ditautkan ke produknya → kalau keterangan kosong, nama supplier dipakai sebagai keterangan.
+- Kartu peringatan: `GET /api/stok/perlu-dibeli` → tiap barang membawa `nama_supplier` dari `GROUP_CONCAT` → halaman stok menampilkannya di samping sisa stok.
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini karena VM ter-reset, mirror apt cogentco yang menggantung dibersihkan dulu — server di port 3003, 39 cek, semua lulus):
+- Server nyala: log "Tabel sudah siap." dan akun pemilik dibuat otomatis; `GET /api/sehat` ok
+- Tanpa login: `GET /api/supplier` 401, `/supplier.html` 302 ke `/masuk.html`
+- Data uji: Kopi Sachet Rp5.000 (stok 20), Gula 1kg Rp17.000 (stok 3), Teh Melati Rp4.000 (stok 0)
+- `GET /api/stok/perlu-dibeli` sebelum ada supplier: Teh Melati (0) dulu, lalu Gula 1kg (3), `nama_supplier` null di keduanya
+- `POST /api/supplier` nama kosong ditolak 400; tambah "Toko Sinar" (kontak + alamat) dan "Pasar Induk" (nama saja) 201; `GET /api/supplier` 2 baris, `jumlah_produk` 0
+- `POST /api/supplier/1/produk` tautkan Gula 201; tautkan yang sama lagi tetap 201 dan tidak dobel (jumlah_produk tetap 1); produk 999 ditolak 404; supplier 999 ditolak 404; produk_id "abc" ditolak 400
+- `GET /api/supplier` sesudah tautan: Toko Sinar `jumlah_produk` 1, `nama_produk` "Gula 1kg"; `GET /api/stok/perlu-dibeli`: Gula membawa `nama_supplier` "Toko Sinar", Teh tetap null
+- `POST /api/stok/masuk` Kopi +10 (harga beli 4500, supplier Toko Sinar, tanpa keterangan) 201, stok_baru 30 — riwayat keterangannya jadi "Toko Sinar" dan Toko Sinar otomatis menyuplai Kopi juga (2 barang); masuk supplier 999 ditolak 404; supplier_id "x" ditolak 400; masuk +2 via Pasar Induk dengan keterangan "kulakan pagi" 201, stok_baru 32, keterangan tetap "kulakan pagi"
+- Regresi kasir: `GET /api/produk` menampilkan stok Kopi 32; `POST /api/transaksi` jual Kopi 2 (bayar 20000, kembali 10000) 201 — stok Kopi jadi 30; `GET /api/laporan/harian` 200
+- Halaman: `/`, `/kasir.html`, `/stok.html`, `/supplier.html`, `/riwayat.html`, `/js/supplier.js`, `/js/stok.js`, `/css/style.css` semua 200 sesudah login; `supplier.html` memuat `supplier.js` dan navigasi aktif "Supplier"; `stok.html` memuat pilihan supplier; beranda menaut ke `/supplier.html`; `stok.js` memakai `nama_supplier` di peringatan
+- Tidak ada error di log server; data uji dibersihkan (produk, supplier, tautan, riwayat, transaksi kembali 0), server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan. Kalau nama supplier salah ketik, perbaikannya baru bisa lewat basis data langsung.
+- Klik formulir di peramban sungguhan belum diuji — yang diuji endpointnya lewat skrip dan elemen halamannya; alur kirim formulirnya memakai fetch yang sama seperti kode tahap sebelumnya.
+
 ## Tahap berikutnya
 
-Tahap M3: peringatan stok dan supplier — kartu peringatan stok menipis/habis + modul supplier dan tautan supplier–produk (dari inventaris).
+Tahap M4: etalase katalog publik — katalog produk untuk pelanggan (daftar, detail, keranjang, pesan via WhatsApp) tanpa login, terpisah jelas dari halaman admin.

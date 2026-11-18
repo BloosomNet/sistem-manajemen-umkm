@@ -2,8 +2,10 @@
 // lalu mengirim hasilnya sebagai JSON.
 // Modul stok (Tahap M2): daftar stok, barang masuk/keluar, dan riwayat
 // mutasi — memakai tabel produk yang sama dengan kasir.
+// Barang masuk boleh membawa supplier (Tahap M3), lihat barangMasuk.
 const Produk = require('../models/Produk');
 const RiwayatStok = require('../models/RiwayatStok');
+const Supplier = require('../models/Supplier');
 
 // Mengambil angka dari badan permintaan; kalau bukan bilangan bulat
 // positif, hasilnya null supaya pengatur bisa menolaknya.
@@ -60,7 +62,10 @@ async function ringkasan(req, res) {
 
 // POST /api/stok/masuk — barang masuk: stok produk nambah, pergerakannya
 // dicatat di riwayat. Badannya: produk_id, jumlah, harga_beli (boleh
-// kosong), keterangan (boleh kosong, biasanya nama supplier).
+// kosong), keterangan (boleh kosong), supplier_id (boleh kosong).
+// Kalau supplier_id diisi, supplier itu langsung dihubungkan dengan
+// produknya (tautan supplier–produk, Tahap M3) dan namanya dipakai
+// sebagai keterangan kalau keterangan dikosongkan.
 async function barangMasuk(req, res) {
   try {
     const produkId = produkIdValid(req.body.produk_id);
@@ -75,13 +80,31 @@ async function barangMasuk(req, res) {
         return res.status(400).json({ pesan: 'harga_beli harus angka nol atau lebih' });
       }
     }
+    // Supplier boleh kosong; kalau diisi, harus supplier yang memang ada.
+    let supplier = null;
+    if (req.body.supplier_id !== undefined && req.body.supplier_id !== '' && req.body.supplier_id !== null) {
+      const supplierId = Number(req.body.supplier_id);
+      if (!Number.isInteger(supplierId) || supplierId <= 0) {
+        return res.status(400).json({ pesan: 'supplier_id harus diisi dengan angka yang benar' });
+      }
+      supplier = await Supplier.cariBerdasarkanId(supplierId);
+      if (!supplier) {
+        return res.status(404).json({ pesan: 'Supplier tidak ditemukan' });
+      }
+    }
+    const keterangan = req.body.keterangan
+      ? String(req.body.keterangan).trim().slice(0, 255) || null
+      : (supplier ? supplier.nama : null);
     const hasil = await RiwayatStok.catat({
       produk_id: produkId,
       jenis: 'masuk',
       jumlah,
       harga_beli: hargaBeli,
-      keterangan: req.body.keterangan || null,
+      keterangan,
     });
+    if (supplier) {
+      await Supplier.tautkan(supplier.id, produkId);
+    }
     res.status(201).json({ pesan: 'Barang masuk dicatat', ...hasil });
   } catch (err) {
     if (err.kode === 'PRODUK_TIDAK_ADA') {
