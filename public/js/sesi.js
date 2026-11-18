@@ -31,7 +31,14 @@ if (infoMasuk) {
       infoMasuk.append(teksNama, tautanGantiSandi, tombolKeluar);
     })
     .catch(() => {
-      // Belum masuk: tampilkan tautan ke halaman Masuk.
+      // Belum masuk. Di halaman aplikasi, langsung arahkan ke halaman
+      // masuk (penjaga server sebenarnya sudah menahan halaman ini,
+      // ini pengaman tambahan kalau sesi habis di tengah pemakaian).
+      // Di halaman masuk sendiri, cukup tampilkan tautan Masuk.
+      if (window.location.pathname !== '/masuk.html') {
+        window.location.href = '/masuk.html';
+        return;
+      }
       const tautanMasuk = document.createElement('a');
       tautanMasuk.href = '/masuk.html';
       tautanMasuk.textContent = 'Masuk';

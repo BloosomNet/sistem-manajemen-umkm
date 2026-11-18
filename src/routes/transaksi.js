@@ -4,10 +4,10 @@ const router = express.Router();
 const transaksiController = require('../controllers/transaksiController');
 const perluLogin = require('../middleware/perluLogin');
 
-// Bikin transaksi hanya pemilik warung yang sudah masuk.
-// Lihat riwayat tetap terbuka, karena yang ditampilkan cuma angka penjualan.
+// Semua rute transaksi dikunci login, termasuk melihat riwayat —
+// angka penjualan warung bukan untuk dilihat siapa saja.
 router.post('/', perluLogin, transaksiController.buatTransaksi);
-router.get('/', transaksiController.lihatRiwayat);
-router.get('/:id', transaksiController.lihatSatu);
+router.get('/', perluLogin, transaksiController.lihatRiwayat);
+router.get('/:id', perluLogin, transaksiController.lihatSatu);
 
 module.exports = router;

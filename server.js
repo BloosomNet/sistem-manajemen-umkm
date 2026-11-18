@@ -12,6 +12,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Halaman aplikasi dikunci: yang belum masuk diarahkan ke halaman masuk.
+// Penjaga ini dipasang SEBELUM berkas statis dilayani.
+app.use(require('./src/middleware/kunciHalaman'));
+
 // Melayani file statis dari folder public (HTML, CSS, dan JavaScript)
 app.use(express.static(path.join(__dirname, 'public')));
 

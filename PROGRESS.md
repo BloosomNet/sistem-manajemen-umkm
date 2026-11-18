@@ -27,6 +27,21 @@ Kekurangan saat ini (jujur):
 - Modul inventaris dan katalog belum berfungsi di sini — baru skema tabelnya. Itu Tahap M2–M4.
 - Belum ter-deploy — itu Tahap M7.
 
+## Perbaikan fondasi — Selesai: semua halaman dan data dikunci login
+
+Perbaikan yang sama seperti yang diterapkan di aplikasi-kasir-warung sesudah M1, supaya fondasi gabungan tidak mewarisi kekurangan yang sama: login di basis kasir awalnya baru mengunci aksi menulis, sementara halaman dan data bacaan masih terbuka tanpa login.
+
+Yang dibuat kali ini:
+- Penjaga halaman `src/middleware/kunciHalaman.js` dipasang di `server.js` sebelum berkas statis: halaman aplikasi (kecuali `/masuk.html`) diarahkan ke halaman masuk bila belum ada sesi. CSS/JS tidak dikunci (bukan data, dan dibutuhkan halaman masuk).
+- Rute bacaan dikunci `perluLogin`: `GET /api/produk` dan `/:id`, `GET /api/transaksi` dan `/:id`, `GET /api/laporan/harian` dan `/terlaris`.
+- `public/js/sesi.js`: sesi tidak ada/habis di halaman aplikasi = diarahkan ke halaman masuk.
+- Tetap terbuka: `POST /api/masuk` dan `GET /api/sehat` (tanpa data, buat pemeriksaan deploy).
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal, server di port 3003):
+- Tanpa login: `/` 302 ke `/masuk.html`; `GET /api/produk` dan `/api/laporan/harian` 401
+- Sesudah masuk sebagai pemilik: `/` 200 dan `GET /api/produk` 200
+- Data dan pengguna uji dihapus, server dimatikan sesudah uji
+
 ## Tahap berikutnya
 
 Tahap M2: modul stok dari inventaris (daftar stok, barang masuk, barang keluar, riwayat mutasi) menyatu di dashboard yang sama, memakai tabel produk yang sama dengan kasir.
