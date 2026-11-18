@@ -1,0 +1,107 @@
+// Bikin tabel sendiri pas server nyala, biar pas deploy ke Railway
+// nggak perlu jalanin schema.sql manual. Kalau tabel udah ada, dilewatin.
+const pool = require('./database');
+const Pengguna = require('../models/Pengguna');
+
+const buatTabel = [
+  `CREATE TABLE IF NOT EXISTS produk (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(100) NOT NULL,
+    harga INT NOT NULL,
+    stok INT NOT NULL DEFAULT 0,
+    kategori VARCHAR(50),
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS transaksi (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    total INT NOT NULL,
+    bayar INT NOT NULL,
+    kembalian INT NOT NULL,
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS detail_transaksi (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transaksi_id INT NOT NULL,
+    produk_id INT NOT NULL,
+    nama_produk VARCHAR(100) NOT NULL,
+    harga INT NOT NULL,
+    jumlah INT NOT NULL,
+    subtotal INT NOT NULL,
+    FOREIGN KEY (transaksi_id) REFERENCES transaksi(id),
+    FOREIGN KEY (produk_id) REFERENCES produk(id)
+  )`,
+  // Tabel inventaris: tiap barang masuk/keluar dicatat di sini, supaya
+  // ketahuan stok berubah karena apa dan kapan. jenis cuma 'masuk'/'keluar'.
+  `CREATE TABLE IF NOT EXISTS riwayat_stok (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    produk_id INT NOT NULL,
+    jenis ENUM('masuk', 'keluar') NOT NULL,
+    jumlah INT NOT NULL,
+    harga_beli INT NULL,
+    keterangan VARCHAR(255) NULL,
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+  // Supplier: siapa yang menyuplai barang ke warung.
+  `CREATE TABLE IF NOT EXISTS supplier (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(100) NOT NULL,
+    kontak VARCHAR(100) NULL,
+    alamat VARCHAR(255) NULL,
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+  // Hubungan supplier dengan produk yang disuplainya. Satu pasangan
+  // cuma boleh sekali, makanya ada kunci uniknya.
+  `CREATE TABLE IF NOT EXISTS supplier_produk (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_id INT NOT NULL,
+    produk_id INT NOT NULL,
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unik_supplier_produk (supplier_id, produk_id)
+  )`,
+  // Akun pemilik warung untuk login. Kata sandi disimpan sebagai hash,
+  // bukan teks aslinya — lihat src/utils/kataSandi.js.
+  `CREATE TABLE IF NOT EXISTS pengguna (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_pengguna VARCHAR(50) NOT NULL UNIQUE,
+    kata_sandi VARCHAR(255) NOT NULL,
+    dibuat_pada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+];
+
+// Akun pemilik pertama: dibuat otomatis kalau tabel pengguna masih kosong,
+// supaya warung langsung bisa masuk setelah instalasi. Nama dan kata sandi
+// diambil dari .env (OWNER_USER dan OWNER_PASS), kalau nggak diisi
+// pakai bawaan "pemilik" / "warung123" — ganti dulu sebelum dipakai beneran.
+async function siapkanPemilik() {
+  try {
+    const jumlah = await Pengguna.jumlahPengguna();
+    if (jumlah > 0) return;
+    const nama = process.env.OWNER_USER || 'pemilik';
+    const sandi = process.env.OWNER_PASS || 'warung123';
+    await Pengguna.buat(nama, sandi);
+    console.log('Akun pemilik "' + nama + '" sudah dibuat, ganti kata sandinya sebelum dipakai beneran.');
+  } catch (err) {
+    console.log('Gagal bikin akun pemilik:', err.message);
+  }
+}
+
+// Coba bikin tabel, kalau basis data belum siap (misal MySQL Railway
+// masih nyala), tunggu bentar terus coba lagi. Maksimal 12 kali.
+async function siapkanTabel() {
+  for (let percobaan = 1; percobaan <= 12; percobaan++) {
+    try {
+      for (const sql of buatTabel) {
+        await pool.query(sql);
+      }
+      console.log('Tabel sudah siap.');
+      await siapkanPemilik();
+      return;
+    } catch (err) {
+      console.log(`Basis data belum siap (percobaan ${percobaan}/12), coba lagi 5 detik lagi...`);
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+  }
+  console.log('Tabel belum kebikin setelah 12 kali coba, cek pengaturan basis data.');
+}
+
+module.exports = siapkanTabel;

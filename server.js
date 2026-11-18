@@ -1,0 +1,34 @@
+// Titik masuk aplikasi: menjalankan server Express dan melayani halaman utama.
+// Sistem gabungan: basisnya dari aplikasi kasir warung, modul inventaris dan
+// katalog publik digabung bertahap di tahap berikutnya (lihat PROGRESS.md).
+require('dotenv').config();
+const express = require('express');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Membaca data JSON dari permintaan (dipakai saat simpan produk dan transaksi nanti)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Melayani file statis dari folder public (HTML, CSS, dan JavaScript)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Rute pemeriksaan: memastikan server dan basis data masih bisa dihubungi
+app.get('/api/sehat', async (req, res) => {
+  res.json({ status: 'ok', pesan: 'Server sistem manajemen UMKM berjalan' });
+});
+
+// Rute produk, kasir, laporan, dan login.
+app.use('/api/produk', require('./src/routes/produk'));
+app.use('/api/transaksi', require('./src/routes/transaksi'));
+app.use('/api/laporan', require('./src/routes/laporan'));
+app.use('/api', require('./src/routes/auth'));
+
+// Bikin tabel kalau belum ada, biar langsung jalan pas deploy.
+require('./src/config/siapkanTabel')();
+
+app.listen(PORT, () => {
+  console.log(`Server sistem manajemen UMKM berjalan di http://localhost:${PORT}`);
+});
