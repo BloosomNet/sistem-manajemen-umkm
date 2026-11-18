@@ -42,6 +42,8 @@ Yang sudah diuji (basis data MariaDB 10.11 lokal, server di port 3003):
 - Sesudah masuk sebagai pemilik: `/` 200 dan `GET /api/produk` 200
 - Data dan pengguna uji dihapus, server dimatikan sesudah uji
 
+Lanjutan (umpan balik pemilik, hari yang sama): halaman masuk ikut dibersihkan seperti di kasir — bar navigasi dan tautan "Kembali ke Beranda" dihapus dari `masuk.html`, karena sebelum masuk keduanya tidak ada gunanya. Navigasi hanya muncul di halaman sesudah masuk.
+
 ## Tahap berikutnya
 
 Tahap M2: modul stok dari inventaris (daftar stok, barang masuk, barang keluar, riwayat mutasi) menyatu di dashboard yang sama, memakai tabel produk yang sama dengan kasir.
