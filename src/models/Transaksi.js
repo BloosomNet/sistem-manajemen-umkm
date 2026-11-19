@@ -2,6 +2,11 @@
 // Semua langkah di bawah ini dijalankan dalam satu transaksi basis data:
 // kalau ada satu langkah yang gagal, semua perubahan dibatalkan,
 // supaya tidak ada transaksi yang tersimpan setengah-setengah.
+// Penjualan juga dicatat sebagai barang keluar di riwayat_stok —
+// kasir dan modul stok memakai SATU sumber stok yang sama, jadi
+// riwayat mutasi lengkap: masuk dari supplier, keluar karena rusak,
+// DAN keluar karena terjual di kasir. Etalase ikut berubah otomatis
+// karena membaca stok dari tabel produk yang sama ini.
 const pool = require('../config/database');
 
 // Membuat transaksi baru dari keranjang.
@@ -56,10 +61,19 @@ async function buatTransaksi(barang, bayar) {
         'INSERT INTO detail_transaksi (transaksi_id, produk_id, nama_produk, harga, jumlah, subtotal) VALUES (?, ?, ?, ?, ?, ?)',
         [transaksiId, rincianItem.produk_id, rincianItem.nama_produk, rincianItem.harga, rincianItem.jumlah, rincianItem.subtotal]
       );
-      // Stok berkurang sebanyak jumlah yang dibeli.
+      // Stok berkurang sebanyak jumlah yang dibeli, dan pergerakan
+      // ini dicatat di riwayat_stok dalam transaksi yang sama —
+      // jadi penjualan kasir kelihatan di halaman stok, dan kalau
+      // ada yang gagal di tengah jalan, stok maupun catatannya
+      // sama-sama batal, tidak ada yang ketinggalan.
       await koneksi.query(
         'UPDATE produk SET stok = stok - ? WHERE id = ?',
         [rincianItem.jumlah, rincianItem.produk_id]
+      );
+      await koneksi.query(
+        `INSERT INTO riwayat_stok (produk_id, jenis, jumlah, harga_beli, keterangan)
+         VALUES (?, 'keluar', ?, NULL, ?)`,
+        [rincianItem.produk_id, rincianItem.jumlah, `Penjualan kasir #${transaksiId}`]
       );
     }
 

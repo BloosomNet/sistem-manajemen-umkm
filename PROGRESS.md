@@ -150,6 +150,30 @@ Kekurangan saat ini (jujur):
 - Keranjang cuma tersimpan di peramban pelanggan itu sendiri (Local Storage) — ganti HP atau peramban, keranjangnya tidak ikut.
 - Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan (kekurangan dari M3, belum disentuh tahap ini).
 
+## Tahap M5 — Selesai: Alur stok menyatu
+
+Yang sudah dibuat:
+- `src/models/Transaksi.js`: tiap barang yang terjual di kasir sekarang juga dicatat sebagai barang keluar di `riwayat_stok` (jenis `keluar`, keterangan `Penjualan kasir #<id transaksi>`, harga_beli NULL) — di dalam transaksi basis data yang SAMA dengan pencatatan penjualan dan pengurangan stoknya. Sebelum tahap ini penjualan cuma mengurangi `produk.stok` tanpa jejak di riwayat mutasi, jadi halaman stok tidak tahu stok berkurang karena terjual; sekarang riwayatnya lengkap: masuk dari supplier, keluar karena rusak, dan keluar karena terjual. Tidak ada rute atau halaman baru: halaman stok yang sudah ada langsung menampilkan baris penjualan ini (lencana "Keluar" + keterangannya), dan etalase tidak disentuh karena memang sudah membaca tabel `produk` yang sama.
+- README: M5 dicentang.
+
+Cara kerja singkat:
+- Jual di kasir → `POST /api/transaksi` → `buatTransaksi` dalam satu transaksi basis data: cek stok (baris dikunci `FOR UPDATE`), simpan transaksi + rincian, kurangi `produk.stok`, lalu sisipkan baris `riwayat_stok` per barang terjual → commit. Kalau ada satu langkah gagal (stok kurang, uang kurang), semuanya batal: tidak ada transaksi, stok tidak berkurang, dan tidak ada baris riwayat yatim.
+- Alur ujung-ke-ujung yang sama: buat produk → stok masuk lewat `/api/stok/masuk` → jual lewat kasir → stok berkurang di admin dan di etalase (satu tabel `produk`) → riwayat stok menampilkan masuk dan penjualan.
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini karena VM ter-reset, mirror apt cogentco yang menggantung dibersihkan dulu seperti catatan lama — server di port 3003, 22 cek, semua lulus):
+- Server nyala: log "Tabel sudah siap." dan akun pemilik dibuat otomatis; `GET /api/sehat` ok; login pemilik jalan
+- Alur ujung-ke-ujung: buat "Kopi Sachet Uji M5" Rp5.000 stok 0 (201) → stok masuk +20 (201, stok_baru 20) → `GET /api/etalase/:id` stok 20 → jual 3 lewat kasir bayar Rp20.000 (201, total Rp15.000, kembali Rp5.000) → `GET /api/produk/:id` stok 17 → `GET /api/etalase/:id` ikut jadi 17 (tanpa login, satu sumber stok terbukti)
+- Riwayat stok produk itu: 2 baris — masuk 20 ("Toko Sinar") dan keluar 3 dengan keterangan "Penjualan kasir #<id>" (id-nya cocok dengan transaksi yang baru dibuat)
+- Atomisitas: jual 100 (stok 17) ditolak 400, bayar kurang (Rp1.000 untuk Rp5.000) ditolak 400 — sesudah keduanya riwayat tetap 2 baris dan stok tetap 17, tidak ada baris riwayat yatim
+- Batas publik/admin: tanpa login `/api/etalase` dan `/etalase.html` 200, `/api/produk` dan `/api/stok/riwayat` 401
+- Regresi: `GET /api/stok/ringkasan` dan `/api/laporan/harian` 200, `/stok.html` 200 sesudah login; tidak ada error di log server selain jejak `console.error` dari dua penolakan jual yang memang disengaja
+- Data uji dibersihkan (produk, transaksi, riwayat kembali 0), server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Klik tombol jual di peramban sungguhan belum diuji — yang diuji endpointnya lewat curl dan alurnya lewat API; alur kirimnya memakai fetch yang sama seperti kode tahap sebelumnya.
+- Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan (kekurangan dari M3, belum disentuh tahap ini).
+- Baris "Penjualan kasir #N" di halaman stok belum bisa diklik untuk melihat rincian transaksinya — itu jembatan kecil yang bisa masuk Tahap M6 kalau diperlukan.
+
 ## Tahap berikutnya
 
-Tahap M5: alur stok menyatu — penjualan di kasir dan mutasi stok memakai satu sumber stok yang sama; etalase ikut berubah otomatis (sebagian sudah terbukti di M4 lewat jualan kasir yang mengurangi stok etalase; M5 meresmikan alur ujung-ke-ujungnya: buat produk → stok masuk → jual lewat kasir → stok berkurang → cek etalase ikut berubah).
+Tahap M6: dashboard ringkasan + poles — halaman ringkasan menampilkan angka gabungan (total produk, stok menipis, transaksi hari ini, nilai stok) + pencarian dan tampilan HP rapi di semua modul. Uji regresi semua modul.
