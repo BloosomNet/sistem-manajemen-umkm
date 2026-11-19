@@ -216,8 +216,9 @@ tbody tr:last-child td { border-bottom: none; }
 .stok-habis { color: var(--merah); font-weight: 700; }
 
 /* Halaman stok: kartu angka ringkasan, kartu peringatan, saringan,
-   dan formulir barang masuk/keluar. */
-.ringkasan-stok {
+   dan formulir barang masuk/keluar. Grid yang sama dipakai kartu
+   ringkasan dashboard di beranda (Tahap M6). */
+.ringkasan-stok, .ringkasan-dashboard {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
@@ -735,8 +736,9 @@ tbody tr:last-child td { border-bottom: none; }
   .ringkasan { grid-template-columns: 1fr; }
   .ringkasan strong { font-size: 22px; }
 
-  /* Halaman stok: kartu angka jadi dua kolom, formulir jadi satu kolom */
-  .ringkasan-stok { grid-template-columns: repeat(2, 1fr); }
+  /* Halaman stok dan dashboard beranda: kartu angka jadi dua kolom,
+     formulir jadi satu kolom */
+  .ringkasan-stok, .ringkasan-dashboard { grid-template-columns: repeat(2, 1fr); }
   .formulir { grid-template-columns: 1fr; }
 
   .total { font-size: 18px; }

@@ -90,17 +90,29 @@ async function buatTransaksi(barang, bayar) {
 // Melihat daftar transaksi dalam rentang tanggal.
 // Setiap baris berisi jumlah barang yang dibeli, supaya daftar tetap ringkas.
 // dari dan sampai memakai format YYYY-MM-DD.
-async function lihatRiwayat(dari, sampai) {
+// Kalau diberi kata kunci, hanya transaksi yang menjual barang dengan
+// nama cocok yang dikembalikan — polanya diamankan seperti di model
+// Produk, supaya % dan _ dianggap huruf biasa.
+async function lihatRiwayat(dari, sampai, kataKunci) {
+  const kata = typeof kataKunci === 'string' ? kataKunci.trim() : '';
+  const nilai = [dari, sampai];
+  let syaratCari = '';
+  if (kata) {
+    const pola = '%' + kata.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_') + '%';
+    // Cari di rincian barangnya: transaksi yang menjual barang itu saja.
+    syaratCari = ' AND EXISTS (SELECT 1 FROM detail_transaksi d2 WHERE d2.transaksi_id = t.id AND d2.nama_produk LIKE ?)';
+    nilai.push(pola);
+  }
   const [baris] = await pool.query(
     `SELECT t.id, t.total, t.bayar, t.kembalian, t.dibuat_pada,
             COUNT(d.id) AS jumlah_item
        FROM transaksi t
        LEFT JOIN detail_transaksi d ON d.transaksi_id = t.id
-      WHERE DATE(t.dibuat_pada) BETWEEN ? AND ?
+      WHERE DATE(t.dibuat_pada) BETWEEN ? AND ?${syaratCari}
       GROUP BY t.id
       ORDER BY t.dibuat_pada DESC, t.id DESC
       LIMIT 100`,
-    [dari, sampai]
+    nilai
   );
   return baris;
 }
@@ -125,6 +137,23 @@ async function lihatSatu(id) {
   );
   transaksi.barang = rincian;
   return transaksi;
+}
+
+// Ringkasan hari ini buat dashboard beranda: berapa transaksi dan
+// berapa omzet pada tanggal yang diberikan (format YYYY-MM-DD, WIB).
+// dibuat_pada disimpan sebagai TIMESTAMP (UTC di server), jadi
+// tanggalnya digeser dulu ke WIB — kalau tidak, penjualan tengah
+// malam WIB (00.00–07.00) jatuh ke tanggal UTC kemarin dan tidak
+// kehitung di "hari ini". Offset angka tidak butuh tabel zona waktu.
+async function ringkasanHariIni(tanggal) {
+  const [baris] = await pool.query(
+    `SELECT COUNT(*) AS jumlah_transaksi,
+            COALESCE(SUM(total), 0) AS omzet
+       FROM transaksi
+      WHERE DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00')) = ?`,
+    [tanggal]
+  );
+  return baris[0];
 }
 
 // Laporan harian: untuk tiap tanggal, berapa transaksi dan berapa omzetnya.
@@ -159,4 +188,4 @@ async function produkTerlaris(dari, sampai) {
   return baris;
 }
 
-module.exports = { buatTransaksi, lihatRiwayat, lihatSatu, laporanHarian, produkTerlaris };
+module.exports = { buatTransaksi, lihatRiwayat, lihatSatu, ringkasanHariIni, laporanHarian, produkTerlaris };

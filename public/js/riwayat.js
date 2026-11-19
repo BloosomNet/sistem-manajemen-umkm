@@ -18,6 +18,10 @@ const judulRincianEl = document.getElementById('judul-rincian');
 const daftarRincianEl = document.getElementById('daftar-rincian');
 const rincianBayarEl = document.getElementById('rincian-bayar');
 const rincianKembalianEl = document.getElementById('rincian-kembalian');
+const inputCariTransaksi = document.getElementById('cari-transaksi');
+
+// Penanda jeda supaya pencarian tidak mengirim permintaan di setiap ketikan.
+let jedaCari = null;
 
 // Mengubah angka menjadi format rupiah, contoh: 27000 menjadi Rp27.000
 function keRupiah(angka) {
@@ -76,10 +80,16 @@ async function muatLaporan() {
   rincianEl.hidden = true;
 
   try {
+    // Kata kunci cari cuma menyaring daftar transaksi — laporan harian,
+    // produk terlaris, dan ringkasan tetap memakai rentang tanggal saja.
+    const kataKunci = inputCariTransaksi.value.trim();
+    const alamatRiwayat = kataKunci
+      ? `/api/transaksi?dari=${dari}&sampai=${sampai}&cari=${encodeURIComponent(kataKunci)}`
+      : `/api/transaksi?dari=${dari}&sampai=${sampai}`;
     const [harian, terlaris, riwayat] = await Promise.all([
       ambilJson(`/api/laporan/harian?dari=${dari}&sampai=${sampai}`),
       ambilJson(`/api/laporan/terlaris?dari=${dari}&sampai=${sampai}`),
-      ambilJson(`/api/transaksi?dari=${dari}&sampai=${sampai}`),
+      ambilJson(alamatRiwayat),
     ]);
     tampilkanRingkasan(harian.harian);
     tampilkanLaporanHarian(harian.harian);
@@ -130,6 +140,11 @@ function tampilkanDaftarTransaksi(daftar) {
   daftarTransaksiEl.innerHTML = '';
   riwayatKosongEl.hidden = daftar.length > 0;
   pesanRiwayatEl.hidden = true;
+  // Kalau sedang mencari tapi tidak ada yang cocok, beri tahu dengan jelas.
+  const kataKunci = inputCariTransaksi.value.trim();
+  riwayatKosongEl.textContent = kataKunci
+    ? `Tidak ada transaksi yang menjual "${kataKunci}" pada rentang tanggal ini.`
+    : 'Belum ada transaksi pada rentang tanggal ini.';
   for (const transaksi of daftar) {
     const tr = document.createElement('tr');
     tr.className = 'baris-bisa-diklik';
@@ -183,6 +198,12 @@ async function mulai() {
   document.getElementById('form-filter').addEventListener('submit', (acara) => {
     acara.preventDefault();
     muatLaporan();
+  });
+
+  // Pencarian: tunggu 300 ms setelah pengguna berhenti mengetik, baru muat ulang.
+  inputCariTransaksi.addEventListener('input', () => {
+    clearTimeout(jedaCari);
+    jedaCari = setTimeout(muatLaporan, 300);
   });
 
   muatLaporan();

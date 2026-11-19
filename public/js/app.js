@@ -142,6 +142,8 @@ formProduk.addEventListener('submit', async (kejadian) => {
     tampilkanPesan(pesanForm, '');
     kosongkanForm();
     await muatProduk();
+    // Angka ringkasan di beranda ikut dimuat ulang.
+    if (window.muatDashboard) window.muatDashboard();
   } catch (kesalahan) {
     tampilkanPesan(pesanForm, 'Produk gagal disimpan. Periksa server dan basis data.');
   }
@@ -166,6 +168,8 @@ async function hapusProduk(item) {
       return;
     }
     await muatProduk();
+    // Angka ringkasan di beranda ikut dimuat ulang.
+    if (window.muatDashboard) window.muatDashboard();
   } catch (kesalahan) {
     tampilkanPesan(pesanDaftar, 'Produk gagal dihapus. Periksa server dan basis data.');
   }

@@ -15,7 +15,7 @@ Penggabungan dikerjakan bertahap (satu tahap per potongan, selalu diuji sebelum 
 - [x] Tahap M3: Peringatan stok dan supplier — kartu peringatan stok menipis/habis menampilkan suppliernya, modul supplier dan hubungannya dengan produk
 - [x] Tahap M4: Etalase katalog publik — katalog produk untuk pelanggan (daftar, detail, keranjang, pesan via WhatsApp) tanpa login, terpisah jelas dari halaman admin
 - [x] Tahap M5: Alur stok menyatu — penjualan di kasir dan mutasi stok memakai satu sumber stok yang sama; etalase ikut berubah otomatis
-- [ ] Tahap M6: Dashboard ringkasan — total produk, stok menipis, transaksi hari ini, dan nilai stok di satu halaman, plus poles tampilan HP di semua modul
+- [x] Tahap M6: Dashboard ringkasan — total produk, stok menipis, transaksi hari ini, dan nilai stok di satu halaman (beranda), plus pencarian di halaman supplier dan daftar transaksi, dan poles tampilan HP di semua modul
 - [ ] Tahap M7: Deploy online — demo publik yang bisa dicoba langsung
 
 ## Teknologi yang dipakai

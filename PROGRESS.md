@@ -174,6 +174,43 @@ Kekurangan saat ini (jujur):
 - Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan (kekurangan dari M3, belum disentuh tahap ini).
 - Baris "Penjualan kasir #N" di halaman stok belum bisa diklik untuk melihat rincian transaksinya — itu jembatan kecil yang bisa masuk Tahap M6 kalau diperlukan.
 
+## Tahap M6 — Selesai: Dashboard ringkasan + poles
+
+Yang sudah dibuat:
+- `src/models/Produk.js`: `ringkasanStok()` sekarang ikut menghitung `nilai_stok` (jumlah stok dikali harga jualnya). Pemakaian lama di halaman stok tidak berubah — cuma tambah satu kolom.
+- `src/models/Transaksi.js`: fungsi baru `ringkasanHariIni(tanggal)` (jumlah transaksi + omzet pada satu tanggal) dan `lihatRiwayat()` sekarang menerima kata kunci ketiga — kalau diisi, daftar disaring ke transaksi yang menjual barang dengan nama itu (pola LIKE diamankan seperti di model Produk). `lihatRiwayat` tanpa kata kunci berperilaku sama seperti sebelumnya.
+- `src/controllers/dashboardController.js` (baru) + `src/routes/dashboard.js` (baru): `GET /api/dashboard` (dikunci `perluLogin` — angka toko bukan untuk publik) mengembalikan ringkasan stok, penjualan hari ini, dan 5 barang paling mendesak dari `perluDibeli()` beserta nama suppliernya. `server.js`: rute `/api/dashboard` didaftarkan.
+- `public/index.html` + `public/js/dashboard.js` (baru): beranda sekarang membuka dengan kartu "Ringkasan Hari Ini" (jenis produk, total stok, nilai stok, stok menipis, stok habis, transaksi hari ini, omzet hari ini) dan kartu peringatan "Perlu dibeli lagi" (5 teratas, kata-katanya disamakan dengan halaman stok: "dari ..." / "belum ada suppliernya", tautan ke halaman stok). `public/js/app.js`: sesudah produk ditambah, diubah, atau dihapus, angka dashboard ikut dimuat ulang.
+- Pencarian di modul yang belum punya: `public/supplier.html` + `public/js/supplier.js` — kolom "Cari supplier" menyaring kartu yang tampil (nama, kontak, alamat, barang yang disuplai) di sisi peramban dengan debounce 300 ms, pilihan di formulir tautan tetap menampilkan semua supplier. `public/riwayat.html` + `public/js/riwayat.js` — kolom "Cari barang di daftar transaksi" mengirim `&cari=` ke `/api/transaksi`; laporan harian, produk terlaris, dan ringkasan tetap memakai rentang tanggal saja.
+- `src/controllers/transaksiController.js`: `lihatRiwayat` meneruskan `req.query.cari` ke model.
+- `public/css/style.css`: grid kartu angka dipakai bersama halaman stok dan dashboard (`.ringkasan-stok, .ringkasan-dashboard`); di HP keduanya jadi dua kolom. Tidak ada gaya baru yang dobel — kartu angka, kartu peringatan, dan daftar peringatan yang sudah ada dipakai ulang.
+- README: M6 dicentang.
+
+Cara kerja singkat:
+- Buka beranda sesudah masuk → `GET /api/dashboard` → kartu angka terisi dari satu panggilan: `ringkasanStok()` (termasuk nilai stok), `ringkasanHariIni()` (tanggal hari ini WIB), dan `perluDibeli()` (5 teratas).
+- "Hari ini" memakai tanggal WIB: `dibuat_pada` disimpan sebagai TIMESTAMP (UTC di server), jadi tanggalnya digeser dulu ke WIB dengan `CONVERT_TZ(dibuat_pada, '+00:00', '+07:00')` — kalau tidak, penjualan tengah malam WIB (00.00–07.00) jatuh ke tanggal UTC kemarin dan tidak kehitung. Offset angka tidak butuh tabel zona waktu.
+- Cari supplier: disaring di peramban dari daftar yang sudah dimuat. Cari transaksi: disaring di server lewat `EXISTS` di rincian barangnya, jadi transaksi yang menjual barang itu saja yang kembali.
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal, server di port 3003, 42 cek, semua lulus):
+- Server nyala: log "Tabel sudah siap." dan akun pemilik dibuat otomatis; `GET /api/sehat` ok; login pemilik jalan
+- Tanpa login: `GET /api/dashboard` 401, `/` 302 ke `/masuk.html`; etalase tetap 200 tanpa login
+- Data uji: Kopi Sachet Rp5.000 (stok 20, Minuman), Gula 1kg Rp17.000 (stok 3, Bahan), Teh Melati Rp4.000 (stok 0, Minuman)
+- `GET /api/dashboard` sebelum jualan: total_produk 3, total_stok 23, nilai_stok Rp151.000, menipis 1, habis 1, hari ini 0 transaksi omzet Rp0, perlu_dibeli 2 barang (Teh Melati dulu), `nama_supplier` null, tanggal = hari ini WIB
+- Supplier: tambah "Toko Sinar" 201, tautkan Gula 201 → dashboard: Gula membawa `nama_supplier` "Toko Sinar"
+- Jualan kasir: `POST /api/transaksi` jual Kopi 2 (bayar 20000, kembali 10000) 201 → dashboard hari ini jadi 1 transaksi omzet Rp10.000 (terhitung benar walau uji jalan tengah malam WIB — ini yang diuji CONVERT_TZ-nya), total_stok 21, nilai_stok Rp141.000
+- Pencarian riwayat: `?cari=kopi` 1 transaksi, `?cari=gula` 0, `?cari=%` 0 (tanda pola diamankan), tanpa cari 1 transaksi (regresi)
+- Logika saring supplier diuji lewat Node (5 cek, semua lolos): tanpa kata kunci 2, "sinar" 1, "kopi" 1 (lewat barang yang disuplai), "0812" 1, "tidakada" 0
+- Regresi: `GET /api/stok/ringkasan` nilai_stok Rp141.000; `GET /api/produk` 3 barang (termasuk Teh habis); `GET /api/laporan/harian` 200; `GET /api/etalase` tanpa login 2 produk (Teh habis tidak tampil)
+- Halaman: `/`, `/kasir.html`, `/stok.html`, `/supplier.html`, `/riwayat.html`, `/js/dashboard.js`, `/js/supplier.js`, `/js/riwayat.js`, `/css/style.css` semua 200 sesudah login; beranda memuat kartu dashboard (`dash-omzet`, "Perlu dibeli lagi", tautan ke stok); `supplier.html` memuat `cari-supplier`; `riwayat.html` memuat `cari-transaksi`
+- Catatan jujur soal 4 cek awal yang sempat gagal: skrip uji pertama membandingkan angka hasil SUM/COUNT dengan `===` padahal mysql2 mengembalikannya sebagai string ("23"), dan mengira `/api/etalase` mengembalikan array padahal bentuknya `{produk, kategori}` — sesudah skrip diperbaiki, keempat cek itu lolos. Bukan cacat aplikasi. Pembersihan data uji sempat gagal dua kali karena skrip di `/tmp` tidak menemukan `mysql2`/`dotenv` (jalur require-nya relatif ke skrip, bukan ke repo) — dibersihkan manual sesudahnya, terverifikasi produk/transaksi/riwayat/supplier kembali 0.
+- Tidak ada error di log server; data uji dibersihkan, server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Klik kartu dan formulir di peramban sungguhan belum diuji — yang diuji endpointnya lewat curl/Node, logika saringnya lewat Node, dan elemen halamannya; alur kirimnya memakai fetch yang sama seperti kode tahap sebelumnya.
+- Pencarian di riwayat cuma menyaring daftar transaksi — laporan harian dan produk terlaris tetap menampilkan seluruh rentang tanggal, jadi angkanya bisa terlihat tidak cocok dengan daftar yang tersaring kalau sedang mencari. Itu sengaja (biar ringkasan tetap utuh), tapi perlu dijelaskan ke pemilik kalau ditanya.
+- "Hari ini" di dashboard sudah WIB, tapi laporan harian dan riwayat masih memakai `DATE(dibuat_pada)` mentah (UTC server) — penjualan tengah malam WIB bisa jatuh ke tanggal yang berbeda di laporan dibanding di dashboard. Perlu diselaraskan di tahap poles berikutnya kalau pemilik merasa angkanya janggal.
+- Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan (kekurangan dari M3, belum disentuh tahap ini).
+
 ## Tahap berikutnya
 
-Tahap M6: dashboard ringkasan + poles — halaman ringkasan menampilkan angka gabungan (total produk, stok menipis, transaksi hari ini, nilai stok) + pencarian dan tampilan HP rapi di semua modul. Uji regresi semua modul.
+Tahap M7: deploy gabungan ke Railway (pola kasir) — siapkan + laporkan; deploy sungguhan, cek demo publik (etalase, login, /api/sehat), dan penulisan link demo dilakukan SESUDAH konfirmasi user di chat. README final harus menjual project ini dengan layak: fitur lengkap, arsitektur singkat, teknologi, cara menjalankan, link demo.

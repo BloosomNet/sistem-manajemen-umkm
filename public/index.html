@@ -22,6 +22,28 @@
     <p id="status">Memeriksa server...</p>
 
     <section class="kartu">
+      <h2>Ringkasan Hari Ini</h2>
+      <p class="keterangan" id="dashboard-tanggal">Memuat ringkasan...</p>
+      <div class="ringkasan-dashboard">
+        <div class="kartu-angka"><span class="angka" id="dash-produk">—</span><span class="label-angka">Jenis produk</span></div>
+        <div class="kartu-angka"><span class="angka" id="dash-stok">—</span><span class="label-angka">Total stok</span></div>
+        <div class="kartu-angka"><span class="angka" id="dash-nilai">—</span><span class="label-angka">Nilai stok</span></div>
+        <div class="kartu-angka peringatan"><span class="angka" id="dash-menipis">—</span><span class="label-angka">Stok menipis</span></div>
+        <div class="kartu-angka bahaya"><span class="angka" id="dash-habis">—</span><span class="label-angka">Stok habis</span></div>
+        <div class="kartu-angka"><span class="angka" id="dash-transaksi">—</span><span class="label-angka">Transaksi hari ini</span></div>
+        <div class="kartu-angka"><span class="angka" id="dash-omzet">—</span><span class="label-angka">Omzet hari ini</span></div>
+      </div>
+      <p id="pesan-dashboard" class="pesan" hidden></p>
+    </section>
+
+    <section class="kartu kartu-peringatan">
+      <h2>Perlu dibeli lagi</h2>
+      <ul class="daftar-peringatan" id="dashboard-peringatan"></ul>
+      <p id="dashboard-peringatan-kosong" class="keterangan" hidden>Semua stok masih aman.</p>
+      <p><a href="/stok.html">Lihat halaman stok →</a></p>
+    </section>
+
+    <section class="kartu">
       <h2 id="judul-form">Tambah Produk</h2>
       <form id="form-produk">
         <label>
@@ -73,6 +95,7 @@
     </section>
   </main>
   <script src="/js/sesi.js"></script>
+  <script src="/js/dashboard.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

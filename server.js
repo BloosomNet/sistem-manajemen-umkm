@@ -24,12 +24,13 @@ app.get('/api/sehat', async (req, res) => {
   res.json({ status: 'ok', pesan: 'Server sistem manajemen UMKM berjalan' });
 });
 
-// Rute produk, kasir, stok, supplier, laporan, dan login.
+// Rute produk, kasir, stok, supplier, laporan, dashboard, dan login.
 app.use('/api/produk', require('./src/routes/produk'));
 app.use('/api/transaksi', require('./src/routes/transaksi'));
 app.use('/api/stok', require('./src/routes/stok'));
 app.use('/api/supplier', require('./src/routes/supplier'));
 app.use('/api/laporan', require('./src/routes/laporan'));
+app.use('/api/dashboard', require('./src/routes/dashboard'));
 // Etalase publik: tanpa login, terpisah dari rute admin di atas.
 app.use('/api/etalase', require('./src/routes/etalase'));
 app.get('/api/wa-nomor', require('./src/controllers/etalaseController').waNomor);

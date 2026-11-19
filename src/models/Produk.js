@@ -88,16 +88,18 @@ async function perluDibeli() {
   return baris;
 }
 
-// Ringkasan stok buat kartu di halaman stok: jumlah produk, total stok,
-// berapa yang menipis, dan berapa yang habis. Dihitung sekali jalan
-// dari tabel produk.
+// Ringkasan stok buat kartu di halaman stok dan dashboard beranda:
+// jumlah produk, total stok, berapa yang menipis, berapa yang habis,
+// dan nilai stok (jumlah stok dikali harga jualnya). Dihitung sekali
+// jalan dari tabel produk.
 async function ringkasanStok() {
   const [baris] = await pool.query(
     `SELECT
       COUNT(*) AS total_produk,
       COALESCE(SUM(stok), 0) AS total_stok,
       COALESCE(SUM(CASE WHEN stok > 0 AND stok <= ? THEN 1 ELSE 0 END), 0) AS menipis,
-      COALESCE(SUM(CASE WHEN stok = 0 THEN 1 ELSE 0 END), 0) AS habis
+      COALESCE(SUM(CASE WHEN stok = 0 THEN 1 ELSE 0 END), 0) AS habis,
+      COALESCE(SUM(stok * harga), 0) AS nilai_stok
      FROM produk`,
     [BATAS_MENIPIS]
   );

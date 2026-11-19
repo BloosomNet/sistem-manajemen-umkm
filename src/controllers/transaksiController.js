@@ -40,14 +40,16 @@ async function buatTransaksi(req, res) {
 module.exports = { buatTransaksi, lihatRiwayat, lihatSatu };
 
 // Melihat daftar transaksi dalam rentang tanggal.
-// Contoh: GET /api/transaksi?dari=2026-11-01&sampai=2026-11-13
+// Contoh: GET /api/transaksi?dari=2026-11-01&sampai=2026-11-13&cari=kopi
+// Kata kunci cari boleh kosong; kalau diisi, daftar disaring ke
+// transaksi yang menjual barang dengan nama itu saja.
 async function lihatRiwayat(req, res) {
   const rentang = bacaRentangTanggal(req.query);
   if (rentang.galat) {
     return res.status(400).json({ pesan: rentang.galat });
   }
   try {
-    const daftar = await Transaksi.lihatRiwayat(rentang.dari, rentang.sampai);
+    const daftar = await Transaksi.lihatRiwayat(rentang.dari, rentang.sampai, req.query.cari);
     res.json({ dari: rentang.dari, sampai: rentang.sampai, transaksi: daftar });
   } catch (kesalahan) {
     console.error(kesalahan);
