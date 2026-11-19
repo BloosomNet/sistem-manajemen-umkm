@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Produk — Etalase Warung</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="wadah">
+    <p><a class="tautan-kembali" href="/etalase.html">← Kembali ke etalase</a> · <a class="tautan-keranjang" href="/etalase-keranjang.html">Keranjang<span data-lencana-keranjang></span></a></p>
+
+    <div class="kartu">
+      <p id="pesan" class="pesan" hidden></p>
+      <div id="detail-produk" hidden>
+        <h1 id="detail-nama"></h1>
+        <p class="harga-besar" id="detail-harga"></p>
+        <p id="detail-stok"></p>
+        <span class="kategori" id="detail-kategori" hidden></span>
+        <div class="beli">
+          <label for="jumlah-beli">Jumlah</label>
+          <input id="jumlah-beli" type="number" min="1" value="1">
+          <button id="tambah-keranjang" type="button">+ Keranjang</button>
+        </div>
+        <p id="info-keranjang" class="info"></p>
+        <p class="keterangan">Harga dan stok diperbarui dari warung.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/etalase-keranjang.js"></script>
+  <script src="/js/etalase-detail.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etalase — Sistem Manajemen UMKM</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="wadah">
+    <p class="bar-atas"><a class="tautan-keranjang" href="/etalase-keranjang.html">Keranjang<span data-lencana-keranjang></span></a> <a class="tautan-keranjang" href="/masuk.html">Masuk pemilik</a></p>
+    <h1>Etalase Warung</h1>
+    <p class="keterangan">Lihat barang yang tersedia hari ini, lalu pesan lewat WhatsApp. Harga sudah termasuk, stok diperbarui dari warung.</p>
+
+    <div class="kartu">
+      <label class="pencarian">
+        Cari produk
+        <input id="cari" type="search" maxlength="100" placeholder="Cari produk, misal kopi..." autocomplete="off">
+      </label>
+      <div class="saringan" id="saringan">
+        <button class="tombol-saring aktif" data-kategori="">Semua</button>
+      </div>
+      <p id="pesan" class="pesan" hidden></p>
+      <div class="grid-produk" id="daftar-produk"></div>
+      <p id="kosong" class="keterangan" hidden>Belum ada produk dalam kategori ini.</p>
+    </div>
+
+    <p class="keterangan">Pesan lewat WhatsApp dari halaman keranjang — isi pesanan sudah terisi otomatis.</p>
+  </main>
+
+  <script src="/js/etalase-keranjang.js"></script>
+  <script src="/js/etalase.js"></script>
+</body>
+</html>

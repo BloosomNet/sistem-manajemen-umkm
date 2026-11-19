@@ -114,6 +114,42 @@ Kekurangan saat ini (jujur):
 - Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan. Kalau nama supplier salah ketik, perbaikannya baru bisa lewat basis data langsung.
 - Klik formulir di peramban sungguhan belum diuji — yang diuji endpointnya lewat skrip dan elemen halamannya; alur kirim formulirnya memakai fetch yang sama seperti kode tahap sebelumnya.
 
+## Tahap M4 — Selesai: Etalase katalog publik
+
+Yang sudah dibuat:
+- `src/models/Produk.js`: tiga fungsi baru khusus etalase — `semuaProdukTersedia(kategori, kataKunci)` (cuma stok > 0, boleh disaring kategori + dicari, pola LIKE diamankan seperti fungsi admin), `semuaKategori()` (kategori yang masih punya produk tersedia), dan `cariTersediaBerdasarkanId(id)` (null kalau stok habis). Fungsi admin tidak berubah — daftar admin tetap menampilkan semua produk termasuk yang habis.
+- `src/controllers/etalaseController.js` (baru) + `src/routes/etalase.js` (baru): `GET /api/etalase` (daftar + kategori), `GET /api/etalase/:id` (detail), dan `GET /api/wa-nomor` (nomor WhatsApp dari `.env`, dibersihkan dulu supaya langsung bisa dipakai di wa.me; 404 kalau belum diatur). Rute ini SENGAJA tanpa `perluLogin` — terpisah jelas dari `/api/produk` admin yang tetap dikunci. Tidak ada rute tulis di etalase: tambah/ubah/hapus tetap lewat `/api/produk` sesudah masuk.
+- `server.js`: rute `/api/etalase` dan `/api/wa-nomor` didaftarkan.
+- `src/middleware/kunciHalaman.js`: tiga halaman etalase (`/etalase.html`, `/etalase-detail.html`, `/etalase-keranjang.html`) dibuka tanpa login, seperti `/masuk.html`. Halaman admin tetap diarahkan ke halaman masuk.
+- `public/etalase.html` (baru) + `public/js/etalase.js` (baru): daftar produk sebagai kartu (nama, harga, stok, kategori), pencarian (debounce 300 ms), tombol saringan kategori, ketuk kartu membuka detail. Diambil dari katalog-produk-warung, disesuaikan ke rute `/api/etalase`.
+- `public/etalase-detail.html` (baru) + `public/js/etalase-detail.js` (baru): nama, harga besar, stok tersedia, kategori, kolom jumlah (maksimal setinggi stok) + tombol "+ Keranjang".
+- `public/etalase-keranjang.html` (baru) + `public/js/etalase-keranjang.js` (baru): keranjang di Local Storage (kunci `keranjang_etalase`, dibedakan dari keranjang katalog repo asal), tambah/kurang/hapus per barang, jumlah mentok di stok, total harga, tombol "Pesan via WhatsApp" yang cek stok ulang ke server dulu (barang habis dikeluarkan, jumlah berlebih dipotong, harga ikut harga terbaru), lalu membuka wa.me dengan pesan pesanan terisi otomatis; tombol "Kosongkan keranjang". Lencana jumlah keranjang tampil di kepala halaman etalase dan detail.
+- `public/css/style.css`: gaya etalase (`.grid-produk`, `.kartu-produk`, `.tautan-detail`, `.harga-besar`, `.beli`, `.baris-keranjang`, `.atur-jumlah`, `.tombol-whatsapp`, `.tombol-kosongkan`, `.bar-atas`, `.tautan-keranjang`, `.info`) memakai variabel warna repo ini; kelas `.saringan`/`.tombol-saring`, `.total`, `.tombol-hapus`, dan `.tautan-kembali` yang sudah ada dipakai ulang, tidak dibuat dobel. Di HP: saringan digeser ke samping, beli jadi satu kolom selebar kartu, baris keranjang ditumpuk (nama di atas, pengatur jumlah + subtotal sebaris, Hapus selebar kartu); dua kartu berdampingan mulai layar 600px.
+- Navigasi admin: tautan "Etalase" ditambahkan di semua halaman admin (`index.html`, `kasir.html`, `stok.html`, `supplier.html`, `riwayat.html`, `ganti-kata-sandi.html`); halaman etalase sendiri menaut balik ke "Masuk pemilik".
+- `.env.example`: tambahan `WA_NOMOR` (format internasional tanpa +, contoh 6281234567890) dengan penjelasan. README: M4 dicentang.
+
+Cara kerja singkat:
+- Pelanggan buka `/etalase.html` tanpa login → `GET /api/etalase` mengembalikan cuma produk stok > 0 + daftar kategori → kartu produk tampil; saring/cari dikirim sebagai parameter.
+- Ketuk kartu → `/etalase-detail.html?id=...` → `GET /api/etalase/:id` → jumlah dibatasi stok → "+ Keranjang" menyimpan ke Local Storage.
+- Di keranjang → "Pesan via WhatsApp" → `GET /api/etalase` (stok terbaru) → keranjang disesuaikan → `GET /api/wa-nomor` → buka `https://wa.me/<nomor>?text=<pesan pesanan>` di tab baru.
+- Admin tetap lewat `/` dan `/api/produk` sesudah masuk; stok yang sama dipakai kasir dan etalase karena tabel `produk`-nya satu.
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini karena VM ter-reset, mirror apt cogentco yang menggantung dibersihkan dulu — server di port 3003, 35 cek curl + 12 cek Node, semua lulus):
+- Tanpa login: `/etalase.html`, `/etalase-detail.html`, `/etalase-keranjang.html`, `/js/etalase*.js`, `/css/style.css`, `/api/etalase`, `/api/wa-nomor` (nomor 6281234567890) semua 200; `/` dan `/kasir.html` 302 ke `/masuk.html`; `GET /api/produk` dan `/api/stok` 401
+- Data uji: Kopi Sachet Rp5.000 (stok 20, Minuman), Gula 1kg Rp17.000 (stok 3, Bahan), Teh Melati Rp4.000 (stok 0, Minuman)
+- `GET /api/etalase`: 2 produk (Teh habis tidak tampil), kategori `['Bahan', 'Minuman']`; `?kategori=Minuman` 1 produk; `?cari=gula` 1 produk; `?cari=%` 0 produk (tanda pola diamankan)
+- `GET /api/etalase/1` (Kopi) 200 stok 20; detail Teh 404; id 999 404
+- Regresi admin: `GET /api/produk` sesudah login menampilkan 3 produk (termasuk Teh habis); `GET /api/laporan/harian` dan `/api/stok/ringkasan` 200; semua halaman admin 200 sesudah login
+- Satu sumber stok: jual Kopi 2 + 1 lewat kasir (`POST /api/transaksi` 201, 201; laporan harian mencatat 2 transaksi omzet Rp15.000) → `GET /api/etalase/1` stok jadi 17
+- Logika keranjang diuji lewat Node (12 cek, semua lolos): tambah/numpuk mentok di stok, ubah jumlah, hapus pas jumlah 0, kosongkan, susun pesan WA ("Gula 1kg x3 = Rp51.000 ... Total: Rp51.000"), sesuaikan dengan stok segar (barang habis dikeluarkan, jumlah dipotong ke stok, harga ikut harga terbaru)
+- Catatan jujur soal 2 cek awal yang sempat gagal: skrip uji pertama memakai bentuk `items`/`id` buat `POST /api/transaksi`, dijawab 400 — bentuk yang benar di repo ini `barang`/`produk_id` (lihat `kasir.js`); sesudah skrip diperbaiki, kedua cek itu lolos (201, stok 17). Bukan cacat aplikasi.
+- `etalase.html` memuat `etalase.js` dan tautan "Masuk pemilik"; `etalase-detail.html` memuat `etalase-detail.js`; tidak ada error di log server; data uji dibersihkan (produk, transaksi, riwayat, supplier kembali 0), server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Klik tombol "+ Keranjang" dan "Pesan via WhatsApp" di peramban sungguhan belum diuji — yang diuji endpointnya lewat curl, logika keranjangnya lewat Node, dan elemen halamannya; alur kirimnya memakai fetch yang sama seperti kode tahap sebelumnya. Pesan WhatsApp baru terbuka beneran kalau `WA_NOMOR` di `.env` sudah nomor warung asli (di `.env.example` masih contoh).
+- Keranjang cuma tersimpan di peramban pelanggan itu sendiri (Local Storage) — ganti HP atau peramban, keranjangnya tidak ikut.
+- Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan (kekurangan dari M3, belum disentuh tahap ini).
+
 ## Tahap berikutnya
 
-Tahap M4: etalase katalog publik — katalog produk untuk pelanggan (daftar, detail, keranjang, pesan via WhatsApp) tanpa login, terpisah jelas dari halaman admin.
+Tahap M5: alur stok menyatu — penjualan di kasir dan mutasi stok memakai satu sumber stok yang sama; etalase ikut berubah otomatis (sebagian sudah terbukti di M4 lewat jualan kasir yang mengurangi stok etalase; M5 meresmikan alur ujung-ke-ujungnya: buat produk → stok masuk → jual lewat kasir → stok berkurang → cek etalase ikut berubah).

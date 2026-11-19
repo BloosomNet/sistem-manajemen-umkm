@@ -30,6 +30,9 @@ app.use('/api/transaksi', require('./src/routes/transaksi'));
 app.use('/api/stok', require('./src/routes/stok'));
 app.use('/api/supplier', require('./src/routes/supplier'));
 app.use('/api/laporan', require('./src/routes/laporan'));
+// Etalase publik: tanpa login, terpisah dari rute admin di atas.
+app.use('/api/etalase', require('./src/routes/etalase'));
+app.get('/api/wa-nomor', require('./src/controllers/etalaseController').waNomor);
 app.use('/api', require('./src/routes/auth'));
 
 // Bikin tabel kalau belum ada, biar langsung jalan pas deploy.

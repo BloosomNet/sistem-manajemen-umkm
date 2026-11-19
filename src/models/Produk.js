@@ -104,4 +104,48 @@ async function ringkasanStok() {
   return baris[0];
 }
 
-module.exports = { semuaProduk, cariBerdasarkanId, tambahProduk, ubahProduk, hapusProduk, perluDibeli, ringkasanStok, BATAS_MENIPIS };
+// --- Etalase publik (Tahap M4) ---
+// Yang tampil di etalase cuma produk yang masih ada stoknya — pelanggan
+// tidak boleh memesan barang habis. Fungsi-fungsi ini dipakai rute
+// /api/etalase saja, terpisah dari daftar admin yang menampilkan semua produk.
+// Pola amankan kata kunci LIKE sama seperti semuaProduk di atas.
+async function semuaProdukTersedia(kategori, kataKunci) {
+  const kat = typeof kategori === 'string' ? kategori.trim() : '';
+  const kata = typeof kataKunci === 'string' ? kataKunci.trim() : '';
+  const syarat = ['stok > 0'];
+  const nilai = [];
+  if (kat) {
+    syarat.push('kategori = ?');
+    nilai.push(kat);
+  }
+  if (kata) {
+    const pola = '%' + kata.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_') + '%';
+    syarat.push('(nama LIKE ? OR kategori LIKE ?)');
+    nilai.push(pola, pola);
+  }
+  const [baris] = await pool.query(
+    'SELECT * FROM produk WHERE ' + syarat.join(' AND ') + ' ORDER BY nama ASC',
+    nilai
+  );
+  return baris;
+}
+
+// Daftar kategori yang masih punya produk tersedia, buat tombol saringan etalase.
+async function semuaKategori() {
+  const [baris] = await pool.query(
+    'SELECT DISTINCT kategori FROM produk WHERE stok > 0 AND kategori IS NOT NULL AND kategori <> "" ORDER BY kategori ASC'
+  );
+  return baris.map((b) => b.kategori);
+}
+
+// Satu produk berdasarkan id, tapi cuma kalau stoknya masih ada —
+// barang habis tidak bisa dibuka detailnya dari etalase.
+async function cariTersediaBerdasarkanId(id) {
+  const [baris] = await pool.query(
+    'SELECT * FROM produk WHERE id = ? AND stok > 0',
+    [id]
+  );
+  return baris[0] || null;
+}
+
+module.exports = { semuaProduk, cariBerdasarkanId, tambahProduk, ubahProduk, hapusProduk, perluDibeli, ringkasanStok, BATAS_MENIPIS, semuaProdukTersedia, semuaKategori, cariTersediaBerdasarkanId };

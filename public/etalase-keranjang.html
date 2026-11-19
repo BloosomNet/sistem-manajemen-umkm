@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keranjang — Etalase Warung</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="wadah">
+    <p><a class="tautan-kembali" href="/etalase.html">← Kembali ke etalase</a></p>
+
+    <h1>Keranjang Belanja</h1>
+
+    <div class="kartu">
+      <p id="pesan" class="pesan" hidden></p>
+      <div id="daftar-keranjang"></div>
+      <p id="keranjang-kosong" class="keterangan" hidden>Keranjang masih kosong. Balik ke etalase, lalu ketuk produk yang mau dibeli.</p>
+      <div id="ringkasan-keranjang" hidden>
+        <p class="total">Total: <span id="total-harga"></span></p>
+        <button id="pesan-whatsapp" type="button" class="tombol-whatsapp">Pesan via WhatsApp</button>
+        <button id="kosongkan-keranjang" type="button" class="tombol-kosongkan">Kosongkan keranjang</button>
+        <p class="keterangan">Pesan dibuka di WhatsApp — isi pesanannya sudah terisi, tinggal kirim ke nomor warung.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/etalase-keranjang.js"></script>
+</body>
+</html>

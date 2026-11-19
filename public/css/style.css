@@ -500,6 +500,205 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .tautan-kembali:hover { text-decoration: underline; }
 
+/* Tahap M4 — Etalase publik: kartu produk, halaman detail, dan keranjang.
+   Gaya diambil dari katalog-produk-warung, disesuaikan ke variabel warna
+   repo ini. Kelas .saringan/.tombol-saring, .total, .tombol-hapus, dan
+   .tautan-kembali sudah ada di atas, jadi tidak dibuat ulang. */
+.bar-atas {
+  text-align: right;
+  margin: 0 0 4px;
+}
+
+.tautan-keranjang {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--hijau-muda);
+  color: var(--hijau);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Kartu produk: satu kolom di HP, dua kolom di layar lebar. */
+.grid-produk {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.kartu-produk {
+  border: 1px solid var(--garis);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  background: var(--kertas);
+  box-shadow: 0 1px 3px rgba(35, 40, 35, 0.06);
+}
+
+.kartu-produk:hover { border-color: var(--hijau); }
+
+.kartu-produk h2 {
+  margin: 0 0 4px;
+  font-size: 1.1em;
+  border-left: none;
+  padding-left: 0;
+}
+
+.kartu-produk .harga {
+  margin: 0 0 4px;
+  font-size: 1.2em;
+  font-weight: 700;
+  color: var(--hijau);
+}
+
+.kartu-produk .stok {
+  margin: 0;
+  color: var(--abu);
+}
+
+.kartu-produk .kategori {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--hijau-muda);
+  color: var(--hijau);
+  font-size: 0.85em;
+}
+
+.tautan-detail {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--hijau);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Halaman detail produk. */
+#detail-produk h1 { font-size: 1.5em; }
+
+.harga-besar {
+  margin: 0 0 8px;
+  font-size: 1.5em;
+  font-weight: 700;
+  color: var(--hijau);
+}
+
+#detail-produk .kategori {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--hijau-muda);
+  color: var(--hijau);
+  font-size: 0.85em;
+}
+
+/* Beli dari halaman detail: jumlah + tombol keranjang. */
+.beli {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.beli label { margin-bottom: 0; }
+
+.beli input {
+  width: 72px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1.5px solid var(--garis-input);
+  border-radius: 8px;
+  font: inherit;
+}
+
+#tambah-keranjang {
+  min-height: 44px;
+  padding: 10px 18px;
+}
+
+.info { color: var(--hijau-tua); }
+
+/* Halaman keranjang. */
+.baris-keranjang {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--garis);
+}
+
+.baris-keranjang:last-child { border-bottom: none; }
+.baris-keranjang .harga-satuan { margin: 4px 0 0; color: var(--abu); }
+
+.atur-jumlah {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.atur-jumlah button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid var(--garis-input);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--teks);
+  font: inherit;
+  font-size: 1.2em;
+  box-shadow: none;
+}
+
+.atur-jumlah button:hover { background: var(--hijau-muda); }
+
+.atur-jumlah .jumlah {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.subtotal {
+  margin: 0;
+  font-weight: 700;
+  color: var(--hijau);
+}
+
+.tombol-whatsapp {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: #25d366;
+  color: #fff;
+  font-weight: 700;
+}
+
+.tombol-whatsapp:hover { background: #1eb856; }
+.tombol-whatsapp:disabled { background: #9db8a4; cursor: default; }
+
+.tombol-kosongkan {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1.5px solid var(--garis-input);
+  background: #fff;
+  color: var(--teks);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.tombol-kosongkan:hover { background: var(--krem); }
+
+/* Layar agak lebar: dua kartu produk berdampingan. */
+@media (min-width: 600px) {
+  .grid-produk { grid-template-columns: 1fr 1fr; }
+}
+
 /* Tahap 5b — Tampilan rapi di HP.
    Aturan di bawah ini hanya berlaku di layar kecil (lebar 600px ke bawah,
    ukuran HP pada umumnya). Di laptop tidak ada yang berubah. */
@@ -546,6 +745,41 @@ tbody tr:last-child td { border-bottom: none; }
   .navigasi { top: 8px; padding: 6px 8px; gap: 2px 4px; }
   .navigasi a, .navigasi strong { padding: 8px 10px; font-size: 14px; }
   .info-masuk { font-size: 13px; }
+
+  /* Etalase: saringan kategori digeser ke samping, bukan numpuk ke bawah. */
+  .saringan {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tombol-saring { flex-shrink: 0; }
+
+  /* Beli di halaman detail: kolom jumlah sama tombol selebar kartu. */
+  .beli { flex-direction: column; align-items: stretch; }
+  .beli input { width: 100%; }
+  #tambah-keranjang { width: 100%; }
+
+  /* Judul halaman detail jangan nempel sama tautan di atasnya. */
+  #detail-produk h1 { margin-top: 8px; }
+
+  /* Halaman keranjang: baris barang ditumpuk ke bawah, bukan dijejalkan
+     sebaris — nama barang selebar kartu, di bawahnya pengatur jumlah dan
+     subtotal sebaris, tombol Hapus selebar kartu paling bawah. */
+  .baris-keranjang {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .baris-keranjang .atur-jumlah { justify-content: space-between; }
+  .baris-keranjang .subtotal {
+    align-self: flex-end;
+    font-size: 1.1em;
+  }
+  .baris-keranjang .tombol-hapus { width: 100%; }
+
+  /* Tombol kosongkan keranjang selebar kartu. */
+  .tombol-kosongkan { width: 100%; }
 }
 
 /* Layar sangat kecil (HP lama / lebar 400px ke bawah): tabel lebih ringkas lagi */
