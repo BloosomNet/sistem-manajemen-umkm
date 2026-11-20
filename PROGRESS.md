@@ -211,6 +211,32 @@ Kekurangan saat ini (jujur):
 - "Hari ini" di dashboard sudah WIB, tapi laporan harian dan riwayat masih memakai `DATE(dibuat_pada)` mentah (UTC server) — penjualan tengah malam WIB bisa jatuh ke tanggal yang berbeda di laporan dibanding di dashboard. Perlu diselaraskan di tahap poles berikutnya kalau pemilik merasa angkanya janggal.
 - Supplier belum bisa diubah atau dihapus — baru tambah dan hubungkan (kekurangan dari M3, belum disentuh tahap ini).
 
+## Tahap M7 — Persiapan deploy (sebagian): README final + siap deploy
+
+Deploy sungguhan ke Railway BELUM dilakukan di potongan ini — deploy tetap menunggu konfirmasi Farid di chat (perintah user 19 Nov: gerbang push dicabut, gerbang deploy tidak). Yang disiapkan di sini: README final yang menjual project ini, perbaikan kecil yang ketinggalan dari fondasi, daftar cek deploy, dan uji regresi penuh supaya begitu Farid bilang gas, deploy tinggal jalan.
+
+Yang sudah dibuat:
+- README ditulis ulang jadi README final: ringkasan satu paragraf, daftar fitur lengkap per modul (dashboard, kasir, kelola produk, stok, peringatan + supplier, etalase publik, riwayat & laporan, login pemilik), penekanan satu sumber stok, diagram arsitektur singkat (peramban → Express → MySQL 7 tabel), teknologi, cara menjalankan, bagian "Demo" (belum ada link — ditulis sesudah deploy dikonfirmasi), dan bagian "Deploy ke Railway" berisi variabel lingkungan yang harus diisi + catatan basis data.
+- `src/config/database.js`: nama basis data bawaan kalau `DB_NAME` tidak diisi diperbaiki dari `kasir_warung` (sisa salinan kasir dari M1) menjadi `umkm_warung`. Selama ini tidak pernah terasa karena `.env` selalu mengisi `DB_NAME`, tapi di Railway yang lupa isi variabelnya bisa fatal — server akan menulis ke database yang salah.
+- Daftar cek deploy (ditulis di README): variabel `PORT`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=umkm_warung`, `OWNER_USER`, `OWNER_PASS` (ganti dari bawaan), `SESSION_SECRET` (acak panjang), `WA_NOMOR`. Basis data: paket Trial Railway menolak service MySQL baru — seperti deploy inventaris dulu, pakai instance MySQL yang sudah ada (milik katalog) dengan database terpisah `umkm_warung`. Cek sesudah deploy: `/api/sehat` ok, halaman masuk bisa dibuka, `/etalase.html` bisa dibuka tanpa login.
+
+Cara kerja singkat:
+- Server sudah siap deploy dari sisi kode: `PORT` diambil dari environment (Railway mengisinya sendiri), `npm start` menjalankan `server.js`, tabel dibuat otomatis pas server nyala (`siapkanTabel`), dan akun pemilik dibuat otomatis dari `.env`. Tidak ada berkas konfigurasi Railway tambahan yang dibutuhkan — deploy kasir dulu juga jalan dengan pola yang sama.
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini karena VM ter-reset, mirror apt cogentco yang menggantung dibersihkan dulu seperti catatan lama — server di port 3003, 31 cek, semua lulus):
+- Server nyala: log "Tabel sudah siap." dan akun pemilik dibuat otomatis; `GET /api/sehat` ok; login pemilik jalan
+- Tanpa login: `/` 302 ke `/masuk.html`; `GET /api/dashboard` 401; `/etalase.html` dan `GET /api/etalase` 200
+- Alur ujung-ke-ujung: buat "Kopi Sachet Uji M7" Rp5.000 stok 20 (201) → stok masuk +10 (201) → jual 2 lewat kasir bayar Rp20.000 (201) → `GET /api/etalase/:id` stok 28 (satu sumber stok, terbukti sesudah perbaikan database.js)
+- Dashboard: total_produk 1, total_stok 20, nilai_stok Rp100.000 sebelum stok masuk; sesudah jual, angka ikut berubah
+- Regresi halaman: `/`, `/kasir.html`, `/stok.html`, `/supplier.html`, `/riwayat.html`, `/etalase.html`, `/etalase-detail.html`, `/etalase-keranjang.html`, `/masuk.html`, `/css/style.css`, dan semua JS modul (app, dashboard, kasir, stok, supplier, riwayat, etalase, etalase-detail, etalase-keranjang) semua 200 sesudah login
+- Regresi API: `GET /api/laporan/harian`, `/api/stok/ringkasan`, `/api/supplier` semua 200
+- Tidak ada baris "error" di log server; data uji dibersihkan (produk, transaksi, riwayat, supplier kembali 0), server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Deploy sungguhan belum jalan — butuh konfirmasi Farid, lalu dibuat service-nya di panel Railway dan variabel di atas diisi. Link demo di README masih kosong sampai deploy itu selesai dan dicek.
+- Perbaikan nama database bawaan diuji lewat alur lengkap dengan `DB_NAME` terisi (seperti biasa); jalur "DB_NAME tidak diisi sama sekali" belum diuji langsung — cuma dibaca kodenya (`|| 'umkm_warung'`).
+- Kekurangan lama yang belum disentuh: supplier belum bisa diubah/dihapus, laporan harian masih memakai tanggal UTC server (dashboard sudah WIB), dan klik di peramban sungguhan belum diuji.
+
 ## Tahap berikutnya
 
-Tahap M7: deploy gabungan ke Railway (pola kasir) — siapkan + laporkan; deploy sungguhan, cek demo publik (etalase, login, /api/sehat), dan penulisan link demo dilakukan SESUDAH konfirmasi user di chat. README final harus menjual project ini dengan layak: fitur lengkap, arsitektur singkat, teknologi, cara menjalankan, link demo.
+Tahap M7 (lanjutan): deploy gabungan ke Railway sesudah konfirmasi Farid di chat — buat service dari repo ini, isi variabel lingkungan sesuai daftar di README, pakai instance MySQL katalog dengan database `umkm_warung`, lalu cek demo publik (etalase, login, /api/sehat) dan tulis link demo di README. Sesudah itu Tahap M8: jadikan repo ini project andalan di README profil BloosomNet.
