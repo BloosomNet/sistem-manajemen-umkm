@@ -262,6 +262,27 @@ Kekurangan saat ini (jujur):
 - Deploy sungguhan belum jalan — butuh konfirmasi Farid (lihat Tahap berikutnya).
 - Kekurangan lama yang belum disentuh: supplier belum bisa diubah/dihapus, dan klik di peramban sungguhan belum diuji.
 
+## Tahap M8 — Selesai: sistem-manajemen-umkm jadi project andalan di profil
+
+Yang dibuat (di repo profil BloosomNet, bukan di repo ini):
+- `sistem-manajemen-umkm` ditambahkan sebagai project andalan di bagian atas "Featured Projects" README profil, di atas tiga repo asal (kasir, katalog, inventaris), dengan penanda ⭐ Flagship dan deskripsi singkat: kasir + inventaris stok + etalase publik dalam satu aplikasi, satu sumber stok, plus dashboard ringkasan harian.
+- Entrinya jujur soal status: tertulis "Live demo coming soon — deployment in progress", karena deploy M7 masih menunggu konfirmasi Farid dan belum ada link demo yang bisa ditulis.
+- Baris "About Me" di profil disesuaikan sedikit: sekarang menyebut kasir, inventaris, dan katalog sudah digabung jadi satu sistem manajemen.
+- Tiga repo asal tetap tampil di bawahnya sebagai project pendukung, tidak dihapus dan tidak diubah.
+
+Cara kerja singkat:
+- README profil dibaca dari GitHub dulu (head 0385648) dan dibandingkan dengan clone lokal — isinya sama persis, jadi tidak ada perubahan orang lain yang ketimpa.
+- Entri flagship ditulis mengikuti gaya entri yang sudah ada (judul + deskripsi + baris badge shields.io yang sama), hanya ditambah penanda flagship dan catatan demo menyusul.
+
+Yang sudah diuji (perubahan README saja, tidak ada kode):
+- Struktur markdown diperiksa lokal: jumlah tag `<div>` buka/tutup tetap seimbang, tidak ada tag yang ketinggalan; pola URL badge dicek sama persis dengan tiga entri lama (hanya nama repo yang diganti).
+- Tautan repo tujuan sudah terbukti ada — `list_commits` GitHub mengembalikan head 128bb0a untuk repo ini.
+- Tidak ada server yang perlu dinyalakan: tidak ada endpoint, halaman, atau skema yang berubah.
+
+Kekurangan saat ini (jujur):
+- Deploy M7 belum jalan — butuh konfirmasi Farid; sesudah deploy, link demo ditambahkan ke entri profil ini dan ke README repo ini.
+- Kekurangan lama yang belum disentuh: supplier belum bisa diubah/dihapus, dan klik di peramban sungguhan belum diuji.
+
 ## Tahap berikutnya
 
-Tahap M7 (lanjutan): deploy gabungan ke Railway sesudah konfirmasi Farid di chat — buat service dari repo ini, isi variabel lingkungan sesuai daftar di README, pakai instance MySQL katalog dengan database `umkm_warung`, lalu cek demo publik (etalase, login, /api/sehat) dan tulis link demo di README. Sesudah itu Tahap M8: jadikan repo ini project andalan di README profil BloosomNet.
+Tahap M7 (lanjutan): deploy gabungan ke Railway sesudah konfirmasi Farid di chat — buat service dari repo ini, isi variabel lingkungan sesuai daftar di README, pakai instance MySQL katalog dengan database `umkm_warung`, lalu cek demo publik (etalase, login, /api/sehat) dan tulis link demo di README repo ini serta di entri profil (M8 sudah selesai, tinggal tambah link demo). Sesudah deploy selesai, antrean penggabungan habis — run berikutnya masuk ke riset ide project baru (langkah 7 antrean).
