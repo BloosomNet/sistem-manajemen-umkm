@@ -235,7 +235,32 @@ Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini ka
 Kekurangan saat ini (jujur):
 - Deploy sungguhan belum jalan — butuh konfirmasi Farid, lalu dibuat service-nya di panel Railway dan variabel di atas diisi. Link demo di README masih kosong sampai deploy itu selesai dan dicek.
 - Perbaikan nama database bawaan diuji lewat alur lengkap dengan `DB_NAME` terisi (seperti biasa); jalur "DB_NAME tidak diisi sama sekali" belum diuji langsung — cuma dibaca kodenya (`|| 'umkm_warung'`).
-- Kekurangan lama yang belum disentuh: supplier belum bisa diubah/dihapus, laporan harian masih memakai tanggal UTC server (dashboard sudah WIB), dan klik di peramban sungguhan belum diuji.
+- Kekurangan lama yang belum disentuh: supplier belum bisa diubah/dihapus, dan klik di peramban sungguhan belum diuji.
+
+## Perbaikan poles — Selesai: laporan dan riwayat memakai tanggal WIB
+
+Menutup kekurangan M6 yang dicatat di atas: laporan harian dan riwayat masih memakai `DATE(dibuat_pada)` mentah (UTC server), sementara dashboard sudah WIB — penjualan tengah malam WIB (00.00–07.00) jatuh ke tanggal yang berbeda di laporan dibanding di dashboard. Deploy M7 masih menunggu konfirmasi Farid, jadi selagi menunggu, potongan ini merapikan tanggalnya.
+
+Yang sudah dibuat:
+- `src/models/Transaksi.js`: `laporanHarian`, `produkTerlaris`, dan `lihatRiwayat` sekarang memakai `DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00'))` — pola yang sama seperti `ringkasanHariIni` di dashboard, jadi tidak butuh tabel zona waktu. Tidak ada perubahan skema dan tidak ada perubahan bentuk respons.
+- `src/utils/rentangTanggal.js`: rentang bawaan (7 hari terakhir sampai hari ini) sekarang dihitung dalam WIB lewat `toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' })` — pola yang sama seperti dashboard. Sebelumnya memakai `toISOString()` (UTC server), jadi di pagi hari WIB rentang bawaannya masih tanggal kemarin.
+
+Cara kerja singkat:
+- Semua tanggal yang masuk laporan dan riwayat adalah tanggal WIB: transaksi dicatat dengan `dibuat_pada` UTC seperti biasa, tapi saat dikelompokkan atau disaring, tanggalnya digeser dulu +7 jam. Dashboard, laporan harian, terlaris, dan riwayat sekarang sepakat soal "hari ini".
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini karena VM ter-reset, mirror apt cogentco yang menggantung dibersihkan dulu seperti catatan lama — server di port 3003, 13 cek, semua lulus):
+- Server nyala: log "Tabel sudah siap." dan akun pemilik dibuat otomatis; `GET /api/sehat` ok; login pemilik jalan
+- Transaksi uji dibuat lewat kasir (Kopi Uji WIB Rp5.000, jual 2 bayar Rp20.000, omzet Rp10.000), lalu `dibuat_pada`-nya digeser di basis data uji ke 2026-11-19 20:00 UTC (= 2026-11-20 03:00 WIB) untuk menguji batas tanggal
+- `GET /api/laporan/harian?dari=2026-11-20&sampai=2026-11-20`: 1 transaksi, omzet Rp10.000, tanggal 2026-11-20; rentang 2026-11-19 kosong — sebelum perbaikan, transaksi ini jatuh ke 19 Nov
+- `GET /api/laporan/terlaris` rentang 20 Nov: Kopi Uji WIB terjual 2; `GET /api/transaksi` rentang 20 Nov berisi transaksi, rentang 19 Nov tidak
+- `GET /api/dashboard`: tanggal 2026-11-20, jumlah_transaksi 1, omzet Rp10.000 — dashboard dan laporan sekarang cocok
+- `GET /api/laporan/harian` tanpa parameter: rentang bawaan 2026-11-14 sampai 2026-11-20 (WIB), berisi transaksi uji
+- Regresi: `GET /api/stok/ringkasan` 200; halaman `/etalase.html`, `/kasir.html`, `/stok.html`, `/riwayat.html`, `/supplier.html` semua 200
+- Tidak ada baris "error" di log server; data uji dibersihkan (produk, transaksi, riwayat kembali 0), server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Deploy sungguhan belum jalan — butuh konfirmasi Farid (lihat Tahap berikutnya).
+- Kekurangan lama yang belum disentuh: supplier belum bisa diubah/dihapus, dan klik di peramban sungguhan belum diuji.
 
 ## Tahap berikutnya
 

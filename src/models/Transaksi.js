@@ -104,11 +104,14 @@ async function lihatRiwayat(dari, sampai, kataKunci) {
     nilai.push(pola);
   }
   const [baris] = await pool.query(
+    // Tanggalnya digeser dulu ke WIB seperti di ringkasanHariIni —
+    // kalau tidak, transaksi tengah malam WIB (00.00–07.00) jatuh ke
+    // tanggal UTC kemarin dan tidak muncul di rentang yang diminta.
     `SELECT t.id, t.total, t.bayar, t.kembalian, t.dibuat_pada,
             COUNT(d.id) AS jumlah_item
        FROM transaksi t
        LEFT JOIN detail_transaksi d ON d.transaksi_id = t.id
-      WHERE DATE(t.dibuat_pada) BETWEEN ? AND ?${syaratCari}
+      WHERE DATE(CONVERT_TZ(t.dibuat_pada, '+00:00', '+07:00')) BETWEEN ? AND ?${syaratCari}
       GROUP BY t.id
       ORDER BY t.dibuat_pada DESC, t.id DESC
       LIMIT 100`,
@@ -157,14 +160,16 @@ async function ringkasanHariIni(tanggal) {
 }
 
 // Laporan harian: untuk tiap tanggal, berapa transaksi dan berapa omzetnya.
+// Tanggalnya WIB (lihat ringkasanHariIni) — penjualan tengah malam WIB
+// harus masuk ke tanggal WIB-nya, bukan tanggal UTC kemarin.
 async function laporanHarian(dari, sampai) {
   const [baris] = await pool.query(
-    `SELECT DATE(dibuat_pada) AS tanggal,
+    `SELECT DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00')) AS tanggal,
             COUNT(*) AS jumlah_transaksi,
             SUM(total) AS omzet
        FROM transaksi
-      WHERE DATE(dibuat_pada) BETWEEN ? AND ?
-      GROUP BY DATE(dibuat_pada)
+      WHERE DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00')) BETWEEN ? AND ?
+      GROUP BY DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00'))
       ORDER BY tanggal DESC`,
     [dari, sampai]
   );
@@ -179,7 +184,7 @@ async function produkTerlaris(dari, sampai) {
             SUM(d.subtotal) AS pendapatan
        FROM detail_transaksi d
        JOIN transaksi t ON t.id = d.transaksi_id
-      WHERE DATE(t.dibuat_pada) BETWEEN ? AND ?
+      WHERE DATE(CONVERT_TZ(t.dibuat_pada, '+00:00', '+07:00')) BETWEEN ? AND ?
       GROUP BY d.nama_produk
       ORDER BY terjual DESC, pendapatan DESC
       LIMIT 10`,

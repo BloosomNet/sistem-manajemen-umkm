@@ -3,15 +3,18 @@
 // Kalau tanggal tidak diisi, dipakai 7 hari terakhir sampai hari ini.
 // Mengembalikan { dari, sampai } atau { galat } kalau tanggal tidak sah.
 function bacaRentangTanggal(query) {
-  const hariIni = new Date();
-  const tujuhHariLalu = new Date(hariIni);
-  tujuhHariLalu.setDate(tujuhHariLalu.getDate() - 6);
+  // Tanggal bawaan dihitung dalam WIB, sama seperti dashboard — kalau
+  // memakai tanggal UTC server, di pagi hari WIB (00.00–07.00) rentang
+  // bawaannya masih tanggal kemarin dan transaksi hari ini tidak ikut.
+  const keTeksWIB = (tanggal) =>
+    tanggal.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
 
-  // Ubah tanggal menjadi teks YYYY-MM-DD memakai waktu setempat.
-  const keTeks = (tanggal) => tanggal.toISOString().slice(0, 10);
+  const hariIniWIB = keTeksWIB(new Date());
+  const tujuhHariLalu = new Date(hariIniWIB + 'T00:00:00Z');
+  tujuhHariLalu.setUTCDate(tujuhHariLalu.getUTCDate() - 6);
 
-  const dari = query.dari || keTeks(tujuhHariLalu);
-  const sampai = query.sampai || keTeks(hariIni);
+  const dari = query.dari || keTeksWIB(tujuhHariLalu);
+  const sampai = query.sampai || hariIniWIB;
 
   const polaTanggal = /^\d{4}-\d{2}-\d{2}$/;
   if (!polaTanggal.test(dari) || !polaTanggal.test(sampai)) {
