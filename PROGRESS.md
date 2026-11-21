@@ -314,6 +314,31 @@ Kekurangan saat ini (jujur):
 - Deploy sungguhan belum jalan — butuh konfirmasi Farid (lihat Tahap berikutnya).
 - Kekurangan lama yang belum disentuh: klik tombol Ubah/Hapus di peramban sungguhan belum diuji — yang diuji endpointnya lewat curl, logikanya lewat skrip, dan elemen halamannya; alur kirimnya memakai fetch yang sama seperti kode tahap sebelumnya.
 
+## Perbaikan poles — Selesai: tombol Ubah/Hapus supplier teruji di peramban sungguhan
+
+Menutup kekurangan yang dicatat di dua entri sebelumnya: klik tombol Ubah/Hapus supplier di peramban sungguhan belum pernah diuji — yang diuji baru endpointnya lewat curl, logikanya lewat skrip, dan elemen halamannya. Potongan ini tidak mengubah kode apa pun (tidak ada cacat yang ketemu), hanya membuktikan alur kliknya beneran jalan di peramban. Deploy M7 masih menunggu konfirmasi Farid, jadi selagi menunggu, potongan ini menutup kekurangan itu.
+
+Yang sudah dibuat:
+- Skrip uji peramban `uji_supplier_peramban.py` (Camoufox headless, Playwright) — disimpan di luar repo, di catatan kerja goal, supaya tidak ikut ter-push: masuk lewat formulir login sungguhan, tambah supplier lewat formulir, klik Ubah, simpan perubahan nama, klik Hapus (dialog confirm diterima otomatis), lalu cek regresi halaman kasir dan etalase. Kredensial pemilik dibaca dari `.env` lokal, tidak ditulis di skrip.
+- Tiga bukti screenshot dari peramban: sesudah tambah (`1-sesudah-tambah.png`), mode ubah (`2-mode-ubah.png`), sesudah hapus (`3-sesudah-hapus.png`) — tersimpan bersama skripnya di catatan kerja goal.
+
+Cara kerja singkat:
+- Peramban membuka `http://localhost:3003/masuk.html`, mengisi nama pengguna dan kata sandi lalu mengklik tombol masuk (pindah ke beranda); lanjut ke `/supplier.html`, mengisi formulir tambah supplier lalu mengklik simpan; mengklik tombol Ubah di kartu (formulir berubah jadi mode ubah dan terisi data lama), mengganti nama lalu menyimpan; mengklik Hapus dan menerima dialog confirm — semuanya lewat klik dan ketikan sungguhan, bukan panggilan API langsung.
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal yang sudah jalan sejak run sebelumnya — server di port 3003, 8 cek, semua lulus):
+- Masuk lewat formulir login: pindah ke beranda
+- Halaman supplier kosong di awal ("Belum ada supplier")
+- Tambah supplier lewat formulir: kartu "Toko Uji Peramban" muncul di daftar
+- Klik Ubah membuka mode ubah: judul jadi "Ubah supplier", kolom nama terisi "Toko Uji Peramban", tombol "Batal ubah" kelihatan
+- Simpan perubahan: daftar menampilkan "Toko Uji Peramban Baru", nama lama hilang
+- Klik Hapus + confirm: daftar kembali kosong ("Belum ada supplier")
+- Regresi: halaman kasir terbuka sesudah uji, etalase publik terbuka tanpa login
+- Data uji dibersihkan: sesudah uji `GET /api/supplier` mengembalikan daftar kosong dan ringkasan stok kembali 0 semua; tidak ada baris "error" di log server; server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Deploy sungguhan belum jalan — butuh konfirmasi Farid (lihat Tahap berikutnya).
+- Kekurangan lama yang belum disentuh: klik di peramban sungguhan untuk modul lain (kasir, stok, riwayat, etalase) masih belum diuji — yang diuji di potongan ini baru alur supplier; halaman kasir dan etalase baru dicek terbukanya saja, belum alur kliknya.
+
 ## Tahap berikutnya
 
 Tahap M7 (lanjutan): deploy gabungan ke Railway sesudah konfirmasi Farid di chat — buat service dari repo ini, isi variabel lingkungan sesuai daftar di README, pakai instance MySQL katalog dengan database `umkm_warung`, lalu cek demo publik (etalase, login, /api/sehat) dan tulis link demo di README repo ini serta di entri profil (M8 sudah selesai, tinggal tambah link demo). Sesudah deploy selesai, antrean penggabungan habis — run berikutnya masuk ke riset ide project baru (langkah 7 antrean).
