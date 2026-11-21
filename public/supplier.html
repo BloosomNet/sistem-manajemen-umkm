@@ -21,7 +21,7 @@
     <p class="keterangan">Siapa yang menyuplai barang apa — biar pas stok menipis, langsung tahu mau pesan ke siapa. Supplier yang dihubungkan dengan barangnya ikut muncul di kartu peringatan halaman stok.</p>
 
     <section class="kartu">
-      <h2>Tambah supplier</h2>
+      <h2 id="judul-form-supplier">Tambah supplier</h2>
       <form id="form-supplier" class="formulir">
         <label class="kolom">
           Nama supplier
@@ -35,7 +35,8 @@
           Alamat (boleh kosong)
           <input type="text" id="supplier-alamat" maxlength="255" placeholder="alamat toko atau pasar">
         </label>
-        <button type="submit">Tambah supplier</button>
+        <button type="submit" id="tombol-simpan-supplier">Tambah supplier</button>
+        <button type="button" id="tombol-batal-ubah" hidden>Batal ubah</button>
       </form>
       <p id="pesan-supplier" class="pesan" hidden></p>
     </section>

@@ -37,6 +37,38 @@ async function tambah({ nama, kontak, alamat }) {
   return cariBerdasarkanId(hasil.insertId);
 }
 
+// Mengubah data supplier. Mengembalikan supplier sesudah diubah,
+// atau null kalau id-nya tidak ada.
+async function ubah(id, { nama, kontak, alamat }) {
+  const [hasil] = await pool.query(
+    'UPDATE supplier SET nama = ?, kontak = ?, alamat = ? WHERE id = ?',
+    [nama, kontak || null, alamat || null, id]
+  );
+  if (hasil.affectedRows === 0) return null;
+  return cariBerdasarkanId(id);
+}
+
+// Menghapus supplier beserta semua tautannya ke produk —
+// supplier_produk tidak punya foreign key, jadi tautannya dihapus
+// dulu supaya tidak ada baris yatim. Riwayat stok tidak ikut
+// berubah: keterangan di sana cuma teks nama supplier.
+// Mengembalikan true kalau supplier-nya memang ada dan terhapus.
+async function hapus(id) {
+  const koneksi = await pool.getConnection();
+  try {
+    await koneksi.beginTransaction();
+    await koneksi.query('DELETE FROM supplier_produk WHERE supplier_id = ?', [id]);
+    const [hasil] = await koneksi.query('DELETE FROM supplier WHERE id = ?', [id]);
+    await koneksi.commit();
+    return hasil.affectedRows > 0;
+  } catch (err) {
+    await koneksi.rollback();
+    throw err;
+  } finally {
+    koneksi.release();
+  }
+}
+
 // Menghubungkan satu supplier dengan satu produk. Kalau hubungan itu
 // sudah ada, tidak didobel — dijawab apa adanya saja.
 async function tautkan(supplierId, produkId) {
@@ -52,4 +84,4 @@ async function tautkan(supplierId, produkId) {
   );
 }
 
-module.exports = { semua, cariBerdasarkanId, tambah, tautkan };
+module.exports = { semua, cariBerdasarkanId, tambah, ubah, hapus, tautkan };

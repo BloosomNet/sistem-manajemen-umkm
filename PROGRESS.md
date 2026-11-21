@@ -283,6 +283,37 @@ Kekurangan saat ini (jujur):
 - Deploy M7 belum jalan — butuh konfirmasi Farid; sesudah deploy, link demo ditambahkan ke entri profil ini dan ke README repo ini.
 - Kekurangan lama yang belum disentuh: supplier belum bisa diubah/dihapus, dan klik di peramban sungguhan belum diuji.
 
+## Perbaikan poles — Selesai: supplier bisa diubah dan dihapus
+
+Menutup kekurangan M3 yang dicatat di atas: supplier belum bisa diubah atau dihapus — kalau nama supplier salah ketik, perbaikannya baru bisa lewat basis data langsung. Deploy M7 masih menunggu konfirmasi Farid, jadi selagi menunggu, potongan ini merapikan suppliernya.
+
+Yang sudah dibuat:
+- `src/models/Supplier.js`: `ubah(id, ...)` (UPDATE lalu mengembalikan baris sesudah diubah, null kalau id-nya tidak ada) dan `hapus(id)` (hapus tautan di `supplier_produk` dulu lalu suppliernya, dalam satu transaksi — tabel itu tidak punya foreign key, jadi tanpa langkah ini tautannya jadi baris yatim; riwayat stok tidak ikut berubah karena keterangannya cuma teks nama supplier).
+- `src/controllers/supplierController.js`: `PUT /api/supplier/:id` (nama wajib, kontak dan alamat boleh kosong, pola potong 100/100/255 sama seperti tambah) dan `DELETE /api/supplier/:id`; keduanya 404 kalau id tidak ada, 400 kalau id bukan angka.
+- `src/routes/supplier.js`: kedua rute didaftarkan dengan `perluLogin` — ubah dan hapus supplier tetap data toko, bukan etalase publik.
+- `public/supplier.html` + `public/js/supplier.js`: tiap kartu supplier sekarang punya tombol "Ubah" dan "Hapus"; Ubah mengisi formulir yang sama (judul jadi "Ubah supplier", tombol jadi "Simpan perubahan", ada tombol "Batal ubah") lalu menyimpan lewat PUT; Hapus menanyakan dulu lewat confirm (dijelaskan tautannya ikut lepas, riwayat tetap) lalu DELETE. Kalau supplier yang sedang diubah ikut dihapus, mode ubahnya ikut dibatalkan.
+- `public/css/style.css`: baris tombol `.aksi-supplier` (flex, mengikuti gaya tombol kecil yang sudah ada — `.tombol-kecil` dan `.tombol-hapus` dipakai ulang, tidak ada gaya baru yang dobel).
+
+Cara kerja singkat:
+- Ubah: klik "Ubah" di kartu → formulir terisi data lama → simpan → `PUT /api/supplier/:id` → daftar dimuat ulang; tautan ke produknya tidak berubah.
+- Hapus: klik "Hapus" → confirm → `DELETE /api/supplier/:id` → tautan di `supplier_produk` ikut terhapus dalam transaksi yang sama → daftar dimuat ulang; kartu peringatan stok langsung kehilangan nama suppliernya (kembali "belum ada suppliernya") karena `perluDibeli()` membaca tautan yang sama.
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini karena VM ter-reset, database + user dibuat ulang dengan kata sandi acak baru di `.env` lokal — server di port 3003, 41 cek, semua lulus):
+- Server nyala: log "Tabel sudah siap." dan akun pemilik dibuat otomatis; `GET /api/sehat` ok; login pemilik jalan
+- Tanpa login: `PUT /api/supplier/1` dan `DELETE /api/supplier/1` 401
+- Data uji: Kopi Sachet Rp5.000 (stok 20), Gula 1kg Rp17.000 (stok 3); tambah "Toko Sinar" dan "Pasar Induk" 201; nama kosong ditolak 400; tautkan Gula ke Toko Sinar 201
+- `GET /api/supplier`: Toko Sinar `jumlah_produk` 1, `nama_produk` "Gula 1kg Uji"; `GET /api/stok/perlu-dibeli`: Gula membawa `nama_supplier` "Toko Sinar"
+- `PUT /api/supplier/1` ubah jadi "Toko Sinar Baru" + kontak baru 200, alamat kosong jadi null; `GET /api/supplier` sesudahnya: nama + kontak baru, tautan tetap 1; nama kosong 400; id 999 404; id "x" 400
+- `DELETE /api/supplier/1` 200; `GET /api/supplier` tinggal Pasar Induk; `GET /api/stok/perlu-dibeli`: Gula `nama_supplier` null (tautan ikut bersih); hapus lagi 404; id 999 404; id "x" 400
+- Regresi: `GET /api/stok/ringkasan`, `/api/dashboard`, `/api/laporan/harian` 200; `GET /api/etalase` 200 tanpa login; halaman `/`, `/kasir.html`, `/stok.html`, `/supplier.html`, `/etalase.html`, `/css/style.css`, `/js/supplier.js` semua 200
+- Cek statis: `supplier.html` memuat id judul/tombol simpan/batal; `supplier.js` memuat `data-ubah`/`data-hapus`/confirm/PUT; `style.css` memuat `.aksi-supplier`
+- Catatan jujur soal 5 cek awal yang sempat gagal: skrip uji pertama membaca id produk dari `data.produk.id`, padahal `POST /api/produk` mengembalikan produknya langsung (`data.id`) — sesudah skrip diperbaiki, kelima cek itu lolos. Bukan cacat aplikasi.
+- Tidak ada error di log server; data uji dibersihkan (produk, supplier, tautan, transaksi, riwayat kembali 0), server dimatikan sesudah uji
+
+Kekurangan saat ini (jujur):
+- Deploy sungguhan belum jalan — butuh konfirmasi Farid (lihat Tahap berikutnya).
+- Kekurangan lama yang belum disentuh: klik tombol Ubah/Hapus di peramban sungguhan belum diuji — yang diuji endpointnya lewat curl, logikanya lewat skrip, dan elemen halamannya; alur kirimnya memakai fetch yang sama seperti kode tahap sebelumnya.
+
 ## Tahap berikutnya
 
 Tahap M7 (lanjutan): deploy gabungan ke Railway sesudah konfirmasi Farid di chat — buat service dari repo ini, isi variabel lingkungan sesuai daftar di README, pakai instance MySQL katalog dengan database `umkm_warung`, lalu cek demo publik (etalase, login, /api/sehat) dan tulis link demo di README repo ini serta di entri profil (M8 sudah selesai, tinggal tambah link demo). Sesudah deploy selesai, antrean penggabungan habis — run berikutnya masuk ke riset ide project baru (langkah 7 antrean).

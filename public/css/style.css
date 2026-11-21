@@ -295,6 +295,9 @@ tbody tr:last-child td { border-bottom: none; }
 .kartu-supplier .kontak { color: var(--abu); font-size: 14px; }
 .kartu-supplier .suplai { font-size: 14px; }
 
+/* Tombol Ubah dan Hapus di tiap kartu supplier */
+.aksi-supplier { display: flex; gap: 2px; margin-top: 8px; }
+
 #form-tautan { margin-top: 16px; }
 
 .lencana {
