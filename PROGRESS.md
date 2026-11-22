@@ -339,6 +339,37 @@ Kekurangan saat ini (jujur):
 - Deploy sungguhan belum jalan — butuh konfirmasi Farid (lihat Tahap berikutnya).
 - Kekurangan lama yang belum disentuh: klik di peramban sungguhan untuk modul lain (kasir, stok, riwayat, etalase) masih belum diuji — yang diuji di potongan ini baru alur supplier; halaman kasir dan etalase baru dicek terbukanya saja, belum alur kliknya.
 
+## Perbaikan poles — Selesai: alur klik kasir + etalase teruji di peramban sungguhan
+
+Menutup kekurangan terakhir yang dicatat di dua entri sebelumnya: klik di peramban sungguhan untuk modul lain (kasir, stok, riwayat, etalase) belum pernah diuji — yang diuji baru alur supplier. Potongan ini tidak mengubah kode apa pun (tidak ada cacat yang ketemu), hanya membuktikan alur kliknya beneran jalan di peramban. Deploy M7 masih menunggu konfirmasi Farid, jadi selagi menunggu, potongan ini menutup kekurangan itu.
+
+Yang sudah dibuat:
+- Skrip uji peramban `uji_kasir_etalase_peramban.py` (Camoufox headless, Playwright) — disimpan di luar repo, di catatan kerja goal, supaya tidak ikut ter-push: masuk lewat formulir login, tambah produk lewat formulir beranda, jual 2 lewat kasir (klik Tambah, isi bayar, klik Selesaikan Transaksi), cek stok berkurang di kasir/stok/etalase, lalu di konteks tanpa login buka etalase publik, klik kartu ke detail, tambah ke keranjang, dan cek tombol Pesan via WhatsApp. Kredensial pemilik dibaca dari `.env` lokal, tidak ditulis di skrip.
+- Empat bukti screenshot dari peramban: keranjang kasir (`1-kasir-keranjang.png`), pesan berhasil sesudah bayar (`2-kasir-berhasil.png`), kartu etalase stok 18 (`3-etalase-stok-18.png`), keranjang etalase + tombol WhatsApp (`4-etalase-keranjang.png`) — tersimpan bersama skripnya di catatan kerja goal.
+
+Cara kerja singkat:
+- Kasir (login): tambah "Kopi Uji Peramban" Rp5.000 stok 20 lewat formulir beranda → di kasir klik Tambah 2× (total Rp10.000) → isi bayar Rp20.000 (kembalian terhitung Rp10.000) → klik Selesaikan Transaksi → pesan "Transaksi #3 berhasil. Total Rp10.000, kembalian Rp10.000." → daftar kasir menulis stok 18; halaman stok dan riwayat ikut menampilkan produk/transaksi itu.
+- Etalase (tanpa login, konteks baru): kartu produk menampilkan "Stok: 18" → klik kartu membuka detail ("Stok tersedia: 18") → klik "+ Keranjang" → keranjang menampilkan produk 1 pcs Rp5.000 dan tombol "Pesan via WhatsApp" (tidak diklik sampai membuka wa.me — cukup dibuktikan kelihatan).
+
+Yang sudah diuji (basis data MariaDB 10.11 lokal — dipasang ulang di VM ini karena VM ter-reset, mirror apt cogentco yang menggantung dibersihkan dulu seperti perbaikan 18 Nov; database + user dibuat ulang sesuai `.env` lokal — server di port 3003, 14 cek, semua lulus):
+- Masuk lewat formulir login: pindah ke beranda
+- Tambah produk lewat formulir: produk muncul di daftar
+- Klik Tambah 2× di kasir: total Rp10.000; kembalian terhitung otomatis Rp10.000
+- Selesaikan transaksi lewat tombol bayar: "Transaksi #3 berhasil. Total Rp10.000, kembalian Rp10.000."
+- Stok berkurang sesudah jualan (20 → 18), terlihat di daftar kasir, halaman stok, dan etalase publik
+- Halaman riwayat menampilkan transaksi uji (Rp10.000)
+- Etalase publik tanpa login ikut stok 18; klik kartu membuka detail; tambah ke keranjang jalan; keranjang berisi produk uji; tombol Pesan via WhatsApp kelihatan
+- Data uji dibersihkan: sesudah uji produk, transaksi, riwayat stok, dan supplier kembali 0 semua; tidak ada baris "error" di log server; server dimatikan sesudah uji
+
+Catatan jujur soal perjalanan uji ini (bukan cacat aplikasi):
+- Percobaan pertama skrip ini gagal total di langkah tambah produk (klik Simpan tidak mengirim apa-apa), lalu debug berlapis menunjukkan alurnya kadang jalan kadang tidak di lingkungan yang baru saja di-reset — API lewat curl selalu 201, dan skrip debug yang sama persis lolos begitu dijalankan ulang tanpa perubahan apa pun. Dugaan: kondisi balapan sesaat sesudah MariaDB + server baru dinyalakan di VM yang baru ter-reset. Tidak ada kode yang diubah untuk "memperbaiki" ini; sesudah lingkungan hangat, tiga jalankan ulang skrip penuh semuanya lolos (13/14 lalu 14/14).
+- Satu kali navigasi ke halaman riwayat dibatalkan peramban (`NS_BINDING_ABORTED`) — bukan galat aplikasi; skrip diberi percobaan ulang sekali untuk navigasi, sesudah itu tidak terulang.
+- Satu asersi skrip sempat salah (halaman detail menulis "Stok tersedia: 18", bukan "Stok: 18") — diperbaiki di skripnya, bukan di aplikasi.
+
+Kekurangan saat ini (jujur):
+- Deploy sungguhan belum jalan — butuh konfirmasi Farid (lihat Tahap berikutnya).
+- Semua alur klik modul di peramban sungguhan sekarang sudah teruji (kasir, stok, riwayat, etalase, supplier) — tidak ada lagi kekurangan modul yang tercatat dan belum disentuh.
+
 ## Tahap berikutnya
 
 Tahap M7 (lanjutan): deploy gabungan ke Railway sesudah konfirmasi Farid di chat — buat service dari repo ini, isi variabel lingkungan sesuai daftar di README, pakai instance MySQL katalog dengan database `umkm_warung`, lalu cek demo publik (etalase, login, /api/sehat) dan tulis link demo di README repo ini serta di entri profil (M8 sudah selesai, tinggal tambah link demo). Sesudah deploy selesai, antrean penggabungan habis — run berikutnya masuk ke riset ide project baru (langkah 7 antrean).
