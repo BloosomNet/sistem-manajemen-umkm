@@ -5,23 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem Manajemen UMKM</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="/js/vendor/lucide.min.js"></script>
+  <script src="/js/tampilan.js"></script>
 </head>
 <body>
   <main class="wadah">
     <nav class="navigasi">
-      <strong>Kelola Produk</strong>
-      <a href="/kasir.html">Kasir</a>
-      <a href="/stok.html">Stok</a>
-      <a href="/supplier.html">Supplier</a>
-      <a href="/riwayat.html">Riwayat &amp; Laporan</a>
-      <a href="/etalase.html">Etalase</a>
+      <strong><i data-lucide="layout-grid"></i>Kelola Produk</strong>
+      <a href="/kasir.html"><i data-lucide="shopping-cart"></i>Kasir</a>
+      <a href="/stok.html"><i data-lucide="package"></i>Stok</a>
+      <a href="/supplier.html"><i data-lucide="truck"></i>Supplier</a>
+      <a href="/riwayat.html"><i data-lucide="history"></i>Riwayat &amp; Laporan</a>
+      <a href="/etalase.html"><i data-lucide="store"></i>Etalase</a>
       <span id="info-masuk" class="info-masuk"></span>
     </nav>
     <h1>Sistem Manajemen UMKM</h1>
     <p class="keterangan">Sistem terpadu untuk warung dan UMKM kecil: kasir, inventaris, dan katalog dalam satu aplikasi.</p>
     <p id="status">Memeriksa server...</p>
 
-    <section class="kartu">
+    <section class="kartu memuat">
       <h2>Ringkasan Hari Ini</h2>
       <p class="keterangan" id="dashboard-tanggal">Memuat ringkasan...</p>
       <div class="ringkasan-dashboard">
@@ -34,6 +39,11 @@
         <div class="kartu-angka"><span class="angka" id="dash-omzet">—</span><span class="label-angka">Omzet hari ini</span></div>
       </div>
       <p id="pesan-dashboard" class="pesan" hidden></p>
+    </section>
+
+    <section class="kartu" id="bagian-grafik" hidden>
+      <h2>Omzet 7 Hari Terakhir</h2>
+      <div class="bungkus-grafik"><canvas id="grafik-omzet"></canvas></div>
     </section>
 
     <section class="kartu kartu-peringatan">
@@ -97,5 +107,9 @@
   <script src="/js/sesi.js"></script>
   <script src="/js/dashboard.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/vendor/chart.umd.min.js"></script>
+  <script src="/js/grafik.js"></script>
+  <script src="/js/vendor/gsap.min.js"></script>
+  <script src="/js/animasi.js"></script>
 </body>
 </html>

@@ -193,4 +193,22 @@ async function produkTerlaris(dari, sampai) {
   return baris;
 }
 
-module.exports = { buatTransaksi, lihatRiwayat, lihatSatu, ringkasanHariIni, laporanHarian, produkTerlaris };
+// Omzet per hari dalam rentang tanggal, khusus buat grafik di beranda.
+// Tanggal dikembalikan sebagai teks YYYY-MM-DD (DATE_FORMAT), supaya
+// tidak ada pergeseran zona waktu saat nilainya dibaca JavaScript.
+// Hari tanpa penjualan tidak muncul di hasil — pengisi nolnya di
+// pengatur dashboard, yang tahu hari apa saja yang mau ditampilkan.
+async function omzetPerHari(dari, sampai) {
+  const [baris] = await pool.query(
+    `SELECT DATE_FORMAT(DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00')), '%Y-%m-%d') AS tanggal,
+            COALESCE(SUM(total), 0) AS omzet
+       FROM transaksi
+      WHERE DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00')) BETWEEN ? AND ?
+      GROUP BY DATE(CONVERT_TZ(dibuat_pada, '+00:00', '+07:00'))
+      ORDER BY tanggal ASC`,
+    [dari, sampai]
+  );
+  return baris;
+}
+
+module.exports = { buatTransaksi, lihatRiwayat, lihatSatu, ringkasanHariIni, laporanHarian, produkTerlaris, omzetPerHari };

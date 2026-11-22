@@ -60,9 +60,13 @@ async function muatDashboard() {
     isiKartu('dash-nilai', formatRupiah(data.produk.nilai_stok));
     isiKartu('dash-menipis', data.produk.menipis);
     isiKartu('dash-habis', data.produk.habis);
-    isiKartu('dash-transaksi', `${data.hari_ini.jumlah_transaksi} transaksi`);
+    isiKartu('dash-transaksi', data.hari_ini.jumlah_transaksi);
     isiKartu('dash-omzet', formatRupiah(data.hari_ini.omzet));
     tampilkanPeringatan(data.perlu_dibeli);
+    // Grafik omzet digambar grafik.js bila berkasnya ikut dimuat.
+    if (window.gambarGrafik) window.gambarGrafik(data.omzet_7_hari);
+    // Kerangka berkedip selama memuat dimatikan: angka aslinya sudah datang.
+    document.querySelector('.ringkasan-dashboard')?.closest('section')?.classList.remove('memuat');
   } catch (kesalahan) {
     pesanDashboardEl.textContent = 'Ringkasan tidak bisa dimuat. Periksa server dan basis data.';
     pesanDashboardEl.hidden = false;

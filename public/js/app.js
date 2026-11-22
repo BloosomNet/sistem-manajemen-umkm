@@ -139,11 +139,15 @@ formProduk.addEventListener('submit', async (kejadian) => {
       tampilkanPesan(pesanForm, hasil.pesan || 'Produk gagal disimpan.');
       return;
     }
+    const baruSajaUbah = !!idYangDiubah;
     tampilkanPesan(pesanForm, '');
     kosongkanForm();
     await muatProduk();
     // Angka ringkasan di beranda ikut dimuat ulang.
     if (window.muatDashboard) window.muatDashboard();
+    if (window.tampilkanRoti) {
+      window.tampilkanRoti(baruSajaUbah ? 'Produk diperbarui.' : 'Produk tersimpan.');
+    }
   } catch (kesalahan) {
     tampilkanPesan(pesanForm, 'Produk gagal disimpan. Periksa server dan basis data.');
   }
@@ -170,6 +174,7 @@ async function hapusProduk(item) {
     await muatProduk();
     // Angka ringkasan di beranda ikut dimuat ulang.
     if (window.muatDashboard) window.muatDashboard();
+    if (window.tampilkanRoti) window.tampilkanRoti('Produk dihapus.');
   } catch (kesalahan) {
     tampilkanPesan(pesanDaftar, 'Produk gagal dihapus. Periksa server dan basis data.');
   }

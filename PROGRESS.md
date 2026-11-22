@@ -373,3 +373,15 @@ Kekurangan saat ini (jujur):
 ## Tahap berikutnya
 
 Tahap M7 (lanjutan): deploy gabungan ke Railway sesudah konfirmasi Farid di chat — buat service dari repo ini, isi variabel lingkungan sesuai daftar di README, pakai instance MySQL katalog dengan database `umkm_warung`, lalu cek demo publik (etalase, login, /api/sehat) dan tulis link demo di README repo ini serta di entri profil (M8 sudah selesai, tinggal tambah link demo). Sesudah deploy selesai, antrean penggabungan habis — run berikutnya masuk ke riset ide project baru (langkah 7 antrean).
+
+## Poles UI menyeluruh (22 November 2026, sesudah M8)
+
+Atas arahan Farid, seluruh halaman dipoles tanpa mengubah fungsi:
+
+- Animasi GSAP di beranda: kartu angka muncul bertahap, angka ringkasan menghitung naik, bagian bawah muncul saat digulir, kartu terangkat saat hover. GSAP disimpan lokal di `public/js/vendor/`; halaman tetap utuh bila animasi dimatikan sistem (prefers-reduced-motion).
+- Font Plus Jakarta Sans (dimuat dari Google Fonts, fallback system-ui).
+- Grafik "Omzet 7 Hari Terakhir" (Chart.js) di beranda; data dari tambahan `omzet_7_hari` di `GET /api/dashboard` (model `Transaksi.omzetPerHari`, tanggal DATE_FORMAT supaya bebas geseran zona waktu, hari kosong diisi nol di pengatur).
+- Ikon Lucide di semua tautan navigasi + tombol pengalih tema terang/gelap (tersimpan di localStorage, diterapkan dari <head> supaya tidak berkedip; variabel warna yang sama dipakai, tema gelap menimpa variabelnya).
+- Detail kecil: kerangka berkedip selama ringkasan dimuat, toast "Produk tersimpan/diperbarui/dihapus", keadaan kosong daftar produk berkotak garis putus-putus, fokus papan ketik yang jelas.
+- Responsivitas diverifikasi ulang dengan screenshot 390/768/1440px: tablet dan desktop sudah rapi; cacat HP yang ditemukan (tombol Hapus terpotong di kolom Aksi) diperbaiki — tombol Ubah/Hapus kini ditumpuk di layar ≤600px.
+- Uji lokal: server + MariaDB, API dashboard dicocokkan dengan isi basis data, alur tambah/hapus produk memicu toast dan bersih kembali, screenshot terang/gelap di tiga lebar layar. Bukti di folder QC lokal (tidak ikut repo).
